@@ -1,0 +1,43 @@
+name: Deploy Application to EC2
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with: 
+          terraform_version: 1.3.0
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        working-directory: ./terraform
+
+      - name: Build application
+        run: npm run build
+
+      - name: Deploy Docker Compose
+        env:
+          INSTANCE_IP: ${{ secrets.INSTANCE_IP }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+          sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY ubuntu@$INSTANCE_IP << EOF
+            cd /home/ubuntu/your_project_directory
+            git pull origin master
+            sudo docker-compose -f docker-compose.yml up -d --build
+          EOF
