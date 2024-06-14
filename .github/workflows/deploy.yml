@@ -50,19 +50,19 @@ jobs:
 
       - name: Install dependencies for course backend
         working-directory: ./backend/course
-        run: npm install --legacy-peer-deps
+        run: npm install
 
       - name: Install dependencies for customers backend
         working-directory: ./backend/customers
-        run: npm install --legacy-peer-deps
+        run: npm install
 
       - name: Install dependencies for enrollment backend
         working-directory: ./backend/enrollment
-        run: npm install --legacy-peer-deps
+        run: npm install
 
       - name: Install dependencies for gateway backend
         working-directory: ./backend/gateway
-        run: npm install --legacy-peer-deps
+        run: npm install
 
       - name: Deploy Docker Compose
         env:
