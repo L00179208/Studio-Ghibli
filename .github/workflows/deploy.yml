@@ -32,41 +32,37 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ./terraform
 
+      - name: Install dependencies for admin frontend
+        working-directory: ./admin_frontend
+        run: npm install
+
       - name: Build admin frontend
         working-directory: ./admin_frontend
-        run: |
-          npm install
-          npm run build
+        run: npm run build
 
-      - name: Build course backend
-        working-directory: ./backend/courses
-        run: |
-          npm install
-          npm run build
-
-      - name: Build customers backend
-        working-directory: ./backend/customers
-        run: |
-          npm install
-          npm run build
-
-      - name: Build enrollment backend
-        working-directory: ./backend/enrollment
-        run: |
-          npm install
-          npm run build
-
-      - name: Build gateway backend
-        working-directory: ./backend/gateway
-        run: |
-          npm install
-          npm run build
+      - name: Install dependencies for studio-ghibli frontend
+        working-directory: ./frontend/studio-ghibli
+        run: npm install
 
       - name: Build studio-ghibli frontend
         working-directory: ./frontend/studio-ghibli
-        run: |
-          npm install
-          npm run build
+        run: npm run build
+
+      - name: Install dependencies for course backend
+        working-directory: ./backend/course
+        run: npm install
+
+      - name: Install dependencies for customers backend
+        working-directory: ./backend/customers
+        run: npm install
+
+      - name: Install dependencies for enrollment backend
+        working-directory: ./backend/enrollment
+        run: npm install
+
+      - name: Install dependencies for gateway backend
+        working-directory: ./backend/gateway
+        run: npm install
 
       - name: Deploy Docker Compose
         env:
@@ -78,5 +74,6 @@ jobs:
           sshpass -p ${{ secrets.SSH_PASSWORD }} ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY ubuntu@$INSTANCE_IP << EOF
             cd /home/ubuntu/your_project_directory
             git pull origin master
-            sudo docker-compose -f docker-compose.yml up -d --build
+            sudo docker-compose down
+            sudo docker-compose up -d --build
           EOF
