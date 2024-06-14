@@ -39,7 +39,7 @@ jobs:
           npm run build
 
       - name: Build course backend
-        working-directory: ./backend/course
+        working-directory: ./backend/courses
         run: |
           npm install
           npm run build
