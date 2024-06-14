@@ -55,7 +55,7 @@ jobs:
         run: npm run build
 
       - name: Install dependencies for course backend
-        working-directory: ./backend/course
+        working-directory: ./backend/courses
         run: npm install --legacy-peer-deps
 
       - name: Install dependencies for customers backend
@@ -72,7 +72,7 @@ jobs:
 
       - name: Deploy Docker Compose
         env:
-          INSTANCE_IP: ${{ env.INSTANCE_IP }}
+          INSTANCE_IP: ${{ steps.capture_ip.outputs.INSTANCE_IP }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           echo "${SSH_PRIVATE_KEY}" > ssh_key.pem
