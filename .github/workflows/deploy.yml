@@ -15,7 +15,7 @@ jobs:
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
-        with: 
+        with:
           terraform_version: 1.3.0
 
       - name: Terraform Init
@@ -32,8 +32,41 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ./terraform
 
-      - name: Build application
-        run: npm run build
+      - name: Build admin frontend
+        working-directory: ./admin_frontend
+        run: |
+          npm install
+          npm run build
+
+      - name: Build course backend
+        working-directory: ./backend/course
+        run: |
+          npm install
+          npm run build
+
+      - name: Build customers backend
+        working-directory: ./backend/customers
+        run: |
+          npm install
+          npm run build
+
+      - name: Build enrollment backend
+        working-directory: ./backend/enrollment
+        run: |
+          npm install
+          npm run build
+
+      - name: Build gateway backend
+        working-directory: ./backend/gateway
+        run: |
+          npm install
+          npm run build
+
+      - name: Build studio-ghibli frontend
+        working-directory: ./frontend/studio-ghibli
+        run: |
+          npm install
+          npm run build
 
       - name: Deploy Docker Compose
         env:
