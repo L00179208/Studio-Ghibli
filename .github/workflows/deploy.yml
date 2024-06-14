@@ -35,7 +35,9 @@ jobs:
 
       - name: Capture Instance IP
         id: capture_ip
-        run: echo "INSTANCE_IP=$(terraform output -raw instance_ip)" >> $GITHUB_ENV
+        run: |
+          INSTANCE_IP=$(terraform output -raw instance_ip)
+          echo "INSTANCE_IP=$INSTANCE_IP" >> $GITHUB_ENV
         working-directory: ./terraform
 
       - name: Install dependencies for admin frontend
@@ -55,7 +57,7 @@ jobs:
         run: npm run build
 
       - name: Install dependencies for course backend
-        working-directory: ./backend/courses
+        working-directory: ./backend/course
         run: npm install --legacy-peer-deps
 
       - name: Install dependencies for customers backend
@@ -72,7 +74,7 @@ jobs:
 
       - name: Deploy Docker Compose
         env:
-          INSTANCE_IP: ${{ steps.capture_ip.outputs.INSTANCE_IP }}
+          INSTANCE_IP: ${{ env.INSTANCE_IP }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           echo "${SSH_PRIVATE_KEY}" > ssh_key.pem
