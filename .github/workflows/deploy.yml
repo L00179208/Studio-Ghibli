@@ -49,7 +49,7 @@ jobs:
         run: npm run build
 
       - name: Install dependencies for courses backend
-        working-directory: ./backend/course
+        working-directory: ./backend/courses
         run: npm install
 
       - name: Install dependencies for customers backend
