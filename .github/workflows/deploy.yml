@@ -34,7 +34,7 @@ jobs:
 
       - name: Install dependencies for admin frontend
         working-directory: ./admin_frontend
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build admin frontend
         working-directory: ./admin_frontend
@@ -42,7 +42,7 @@ jobs:
 
       - name: Install dependencies for studio-ghibli frontend
         working-directory: ./frontend/studio-ghibli
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build studio-ghibli frontend
         working-directory: ./frontend/studio-ghibli
@@ -50,19 +50,19 @@ jobs:
 
       - name: Install dependencies for course backend
         working-directory: ./backend/course
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Install dependencies for customers backend
         working-directory: ./backend/customers
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Install dependencies for enrollment backend
         working-directory: ./backend/enrollment
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Install dependencies for gateway backend
         working-directory: ./backend/gateway
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Deploy Docker Compose
         env:
