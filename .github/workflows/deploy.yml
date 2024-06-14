@@ -69,9 +69,9 @@ jobs:
           INSTANCE_IP: ${{ secrets.INSTANCE_IP }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          sudo apt-get update
-          sudo apt-get install -y sshpass
-          ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY ubuntu@$INSTANCE_IP << EOF
+          echo "${SSH_PRIVATE_KEY}" > ssh_key.pem
+          chmod 600 ssh_key.pem
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$INSTANCE_IP << EOF
             cd /home/ubuntu/your_project_directory
             git pull origin master
             sudo docker-compose down
