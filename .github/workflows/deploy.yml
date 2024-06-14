@@ -48,7 +48,7 @@ jobs:
         working-directory: ./frontend/studio-ghibli
         run: npm run build
 
-      - name: Install dependencies for course backend
+      - name: Install dependencies for courses backend
         working-directory: ./backend/course
         run: npm install
 
