@@ -35,7 +35,7 @@ jobs:
 
       - name: Get Instance IP
         id: get_instance_ip
-        run: echo "::set-output name=instance_ip::$(terraform output -raw instance_ip)"
+        run: echo "INSTANCE_IP=$(terraform output -raw instance_ip)" >> $GITHUB_ENV
         working-directory: ./terraform
 
       - name: Install dependencies for admin frontend
@@ -72,12 +72,12 @@ jobs:
 
       - name: Deploy Docker Compose
         env:
-          INSTANCE_IP: ${{ steps.get_instance_ip.outputs.instance_ip }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          INSTANCE_IP: ${{ env.INSTANCE_IP }}
         run: |
           echo "${SSH_PRIVATE_KEY}" > ssh_key.pem
           chmod 600 ssh_key.pem
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@${INSTANCE_IP} << EOF
+          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$INSTANCE_IP << EOF
             cd /home/ubuntu/your_project_directory
             git pull origin master
             sudo docker-compose down
