@@ -24,6 +24,7 @@ jobs:
 
     - name: Build and push images
       run: |
+        cd DockerCompose
         docker-compose build
         docker-compose push
 
@@ -42,7 +43,7 @@ jobs:
     - name: SSH and deploy
       run: |
         ssh -i ${{ secrets.AWS_SSH_KEY }} ubuntu@${{ secrets.EC2_IP }} << 'EOF'
-          cd /home/ubuntu/my-app
+          cd /home/ubuntu/sgproject
           docker-compose pull
           docker-compose up -d
         EOF
