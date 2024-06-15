@@ -43,7 +43,7 @@ jobs:
           echo "Running docker-compose build"
           docker-compose build --verbose
           echo "Running docker-compose push"
-          docker-compose push
+          docker-compose push 
 
   deploy:
     needs: build
