@@ -1,0 +1,29 @@
+name: Generate SSH Key
+
+on: [push]
+
+jobs:
+  generate-key:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate SSH key
+        id: generate_ssh
+        run: |
+          ssh-keygen -t rsa -b 4096 -f my_ssh_key -N ""
+          cat my_ssh_key
+          echo "::set-output name=private_key::$(cat my_ssh_key)"
+          echo "::set-output name=public_key::$(cat my_ssh_key.pub)"
+
+      - name: Save SSH private key to GitHub Secrets
+        uses: mikefarah/yq@4
+        with:
+          cmd: |
+            echo "${{ steps.generate_ssh.outputs.private_key }}" > private_key.txt
+            echo "${{ steps.generate_ssh.outputs.public_key }}" > public_key.txt
+
+      - name: Upload SSH private key as GitHub secret
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh secret set SSH_PRIVATE_KEY -b"${{ steps.generate_ssh.outputs.private_key }}"
