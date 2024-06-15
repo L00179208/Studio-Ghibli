@@ -33,11 +33,11 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: ./terraform
 
-      - name: Capture Instance IP
-        id: capture_ip
+      - name: Capture Instance Details
+        id: capture_details
         run: |
-          INSTANCE_IP=$(terraform output -raw instance_ip)
-          echo "INSTANCE_IP=$INSTANCE_IP" >> $GITHUB_ENV
+          echo "INSTANCE_IP=$(terraform output -raw instance_ip)" >> $GITHUB_ENV
+          echo "PRIVATE_KEY=$(terraform output -raw private_key)" >> $GITHUB_ENV
         working-directory: ./terraform
 
       - name: Install dependencies for admin frontend
@@ -57,27 +57,27 @@ jobs:
         run: npm run build
 
       - name: Install dependencies for course backend
-        working-directory: ./backend/courses
-        run: npm install
+        working-directory: ./backend/course
+        run: npm install --legacy-peer-deps
 
       - name: Install dependencies for customers backend
         working-directory: ./backend/customers
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Install dependencies for enrollment backend
         working-directory: ./backend/enrollment
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Install dependencies for gateway backend
         working-directory: ./backend/gateway
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Deploy Docker Compose
         env:
           INSTANCE_IP: ${{ env.INSTANCE_IP }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          PRIVATE_KEY: ${{ env.PRIVATE_KEY }}
         run: |
-          echo "${SSH_PRIVATE_KEY}" > ssh_key.pem
+          echo "${PRIVATE_KEY}" > ssh_key.pem
           chmod 600 ssh_key.pem
           ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$INSTANCE_IP << EOF
             cd /home/ubuntu/your_project_directory
