@@ -13,11 +13,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Print environment variables
+        run: env
+
       - name: Print directory structure for debugging
         run: |
           echo "Checking directory structure"
           ls -R
           ls -R DockerCompose
+
+      - name: Check Docker version
+        run: docker --version
+
+      - name: Check Docker Compose version
+        run: docker-compose --version
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -31,7 +40,9 @@ jobs:
       - name: Build and push images
         run: |
           cd DockerCompose
-          docker-compose build
+          echo "Running docker-compose build"
+          docker-compose build --verbose
+          echo "Running docker-compose push"
           docker-compose push
 
   deploy:
