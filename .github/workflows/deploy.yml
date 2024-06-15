@@ -1,4 +1,4 @@
-name: Deploy Application to EC2
+name: Deploy to EC2
 
 on:
   push:
@@ -6,81 +6,43 @@ on:
       - master
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: 1.3.0
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
 
-      - name: Terraform Init
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: terraform init
-        working-directory: ./terraform
+    - name: Login to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Terraform Apply
-        id: apply
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: terraform apply -auto-approve
-        working-directory: ./terraform
+    - name: Build and push images
+      run: |
+        docker-compose build
+        docker-compose push
 
-      - name: Capture Instance IP
-        id: capture_ip
-        run: |
-          echo "INSTANCE_IP=$(terraform output -raw instance_ip)" >> $GITHUB_ENV
-        working-directory: ./terraform
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
 
-      - name: Install dependencies for admin frontend
-        working-directory: ./admin_frontend
-        run: npm install --legacy-peer-deps
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Build admin frontend
-        working-directory: ./admin_frontend
-        run: npm run build
+    - name: Copy .env file
+      run: |
+        scp -i ${{ secrets.AWS_SSH_KEY }} .env ubuntu@${{ secrets.EC2_IP }}:/home/ubuntu
 
-      - name: Install dependencies for studio-ghibli frontend
-        working-directory: ./frontend/studio-ghibli
-        run: npm install --legacy-peer-deps
-
-      - name: Build studio-ghibli frontend
-        working-directory: ./frontend/studio-ghibli
-        run: npm run build
-
-      - name: Install dependencies for course backend
-        working-directory: ./backend/courses
-        run: npm install
-
-      - name: Install dependencies for customers backend
-        working-directory: ./backend/customers
-        run: npm install
-
-      - name: Install dependencies for enrollment backend
-        working-directory: ./backend/enrollment
-        run: npm install
-
-      - name: Install dependencies for gateway backend
-        working-directory: ./backend/gateway
-        run: npm install
-
-      - name: Deploy Docker Compose
-        env:
-          INSTANCE_IP: ${{ env.INSTANCE_IP }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          echo "${SSH_PRIVATE_KEY}" > ssh_key.pem
-          chmod 600 ssh_key.pem
-          ssh -o StrictHostKeyChecking=no -i ssh_key.pem ubuntu@$INSTANCE_IP << EOF
-            cd /home/ubuntu/your_project_directory
-            git pull origin master
-            sudo docker-compose down
-            sudo docker-compose up -d --build
-          EOF
+    - name: SSH and deploy
+      run: |
+        ssh -i ${{ secrets.AWS_SSH_KEY }} ubuntu@${{ secrets.EC2_IP }} << 'EOF'
+          cd /home/ubuntu/my-app
+          docker-compose pull
+          docker-compose up -d
+        EOF

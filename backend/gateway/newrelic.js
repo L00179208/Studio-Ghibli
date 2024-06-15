@@ -1,4 +1,4 @@
-'use strict'
+"use strict";
 /**
  * New Relic agent configuration.
  *
@@ -9,20 +9,20 @@ exports.config = {
   /**
    * Array of application names.
    */
-  app_name: ['Gateway'],
+  app_name: ["Gateway"],
   /**
    * Your New Relic license key.
    */
-  license_key: 'eu01xxf21979cda95a1a8163bc2f9471FFFFNRAL',
+  license_key: "eu01xx010e48e282a0d748de1ec3b5e3FFFFNRAL",
   logging: {
     /**
      * Level at which to log. 'trace' is most useful to New Relic when diagnosing
      * issues with the agent, 'info' and higher will impose the least overhead on
      * production applications.
      */
-    level: 'info'
+    level: "info",
   },
-  distributed_tracing:{enabled:true},
+  distributed_tracing: { enabled: true },
   /**
    * When true, all request headers except for those listed in attributes.exclude
    * will be captured for all traces, unless otherwise specified in a destination's
@@ -39,16 +39,16 @@ exports.config = {
      * @name NEW_RELIC_ATTRIBUTES_EXCLUDE
      */
     exclude: [
-      'request.headers.cookie',
-      'request.headers.authorization',
-      'request.headers.proxyAuthorization',
-      'request.headers.setCookie*',
-      'request.headers.x*',
-      'response.headers.cookie',
-      'response.headers.authorization',
-      'response.headers.proxyAuthorization',
-      'response.headers.setCookie*',
-      'response.headers.x*'
-    ]
-  }
-}
+      "request.headers.cookie",
+      "request.headers.authorization",
+      "request.headers.proxyAuthorization",
+      "request.headers.setCookie*",
+      "request.headers.x*",
+      "response.headers.cookie",
+      "response.headers.authorization",
+      "response.headers.proxyAuthorization",
+      "response.headers.setCookie*",
+      "response.headers.x*",
+    ],
+  },
+};
