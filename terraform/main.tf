@@ -20,10 +20,6 @@ resource "aws_instance" "docker" {
   tags = {
     Name = "DockerInstance"
   }
-
-  provisioner "local-exec" {
-    command = "echo '${tls_private_key.ssh_key.private_key_pem}' > private_key.pem"
-  }
 }
 
 output "instance_ip" {
