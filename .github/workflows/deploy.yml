@@ -42,8 +42,9 @@ jobs:
           cd DockerCompose
           echo "Running docker-compose build"
           docker-compose build --verbose
-          echo "Pushing Docker images"
-          docker-compose push
+          echo "Pushing Docker images to l00179208/sgproject"
+          docker-compose push l00179208/sgproject
+
 
   deploy:
     needs: build
