@@ -46,8 +46,8 @@ jobs:
       - name: Build and push images
         run: |
           echo "Building and pushing Docker images"
-          docker-compose -f path/to/your/docker-compose.yml build
-          docker-compose -f path/to/your/docker-compose.yml push
+          docker-compose -f ../DockerCompose/docker-compose.yml build
+          docker-compose -f ../DockerCompose/docker-compose.yml push
 
   deploy:
     needs: build
