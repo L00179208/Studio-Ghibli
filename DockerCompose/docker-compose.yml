@@ -3,7 +3,7 @@ version: "3.8"
 services:
   admin_frontend:
     build:
-      context: ./admin_frontend
+      context: ../admin_frontend
       dockerfile: Dockerfiles/Dockerfile
     ports:
       - "3000:3000"
@@ -12,42 +12,42 @@ services:
 
   courses_backend:
     build:
-      context: ./backend/courses
+      context: ../backend/courses
       dockerfile: Dockerfiles/Dockerfile
     networks:
       - sgproject
 
   gateway_backend:
     build:
-      context: ./backend/gateway
+      context: ../backend/gateway
       dockerfile: Dockerfiles/Dockerfile
     networks:
       - sgproject
 
   customers_backend:
     build:
-      context: ./backend/customers
+      context: ../backend/customers
       dockerfile: Dockerfiles/Dockerfile
     networks:
       - sgproject
 
   users_backend:
     build:
-      context: ./backend/users
+      context: ../backend/users
       dockerfile: Dockerfiles/Dockerfile
     networks:
       - sgproject
 
   enrollment_backend:
     build:
-      context: ./backend/enrollment
+      context: ../backend/enrollment
       dockerfile: Dockerfiles/Dockerfile
     networks:
       - sgproject
 
   sql_backend:
     build:
-      context: ./backend/sql
+      context: ../backend/sql
       dockerfile: Dockerfiles/Dockerfile
     environment:
       MYSQL_ROOT_PASSWORD: sg@group1
