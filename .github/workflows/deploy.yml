@@ -20,7 +20,13 @@ jobs:
         run: |
           echo "Checking directory structure"
           ls -R
-          ls -R DockerCompose
+          ls -R ../admin_frontend
+          ls -R ../backend/courses
+          ls -R ../backend/gateway
+          ls -R ../backend/customers
+          ls -R ../backend/users
+          ls -R ../backend/enrollment
+          ls -R ../backend/sql
 
       - name: Check Docker version
         run: docker --version
@@ -39,12 +45,9 @@ jobs:
 
       - name: Build and push images
         run: |
-          cd DockerCompose
-          echo "Running docker-compose build"
-          docker-compose build --verbose
-          echo "Pushing Docker images to l00179208/sgproject"
-          docker-compose push l00179208/sgproject
-
+          echo "Building and pushing Docker images"
+          docker-compose -f path/to/your/docker-compose.yml build
+          docker-compose -f path/to/your/docker-compose.yml push
 
   deploy:
     needs: build
