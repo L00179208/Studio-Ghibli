@@ -16,17 +16,17 @@ jobs:
       - name: Print environment variables
         run: env
 
-      - name: Print directory structure for debugging
-        run: |
-          echo "Checking directory structure"
-          ls -R
-          ls -R ../admin_frontend
-          ls -R ../backend/courses
-          ls -R ../backend/gateway
-          ls -R ../backend/customers
-          ls -R ../backend/users
-          ls -R ../backend/enrollment
-          ls -R ../backend/sql
+      # - name: Print directory structure for debugging
+      #   run: |
+      #     echo "Checking directory structure"
+      #     ls -R
+      #     ls -R ../admin_frontend
+      #     ls -R ../backend/courses
+      #     ls -R ../backend/gateway
+      #     ls -R ../backend/customers
+      #     ls -R ../backend/users
+      #     ls -R ../backend/enrollment
+      #     ls -R ../backend/sql
 
       - name: Check Docker version
         run: docker --version
