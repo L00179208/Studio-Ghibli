@@ -1,0 +1,56 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2  # Fetches the entire repository code
+
+      - name: Transfer repository files to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "."  # Transfer all files from the current directory (root of the repository)
+          target: "/home/${{ secrets.EC2_USERNAME }}/project"  # Target directory on EC2 instance
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push admin_frontend Docker image
+        working-directory: admin_frontend
+        run: |
+          docker build -t l00179208/sgproject:admin_frontend -f Dockerfiles/Dockerfile .
+          docker tag l00179208/sgproject:admin_frontend l00179208/sgproject:admin_frontend-$GITHUB_SHA
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          docker push l00179208/sgproject:admin_frontend-$GITHUB_SHA
+
+      - name: SSH deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          debug: true
+          script: |
+            docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+            cd /home/${{ secrets.EC2_USERNAME }}/project
+            ls -R  # List contents on EC2 for debugging
+            if [ -f DockerCompose/docker-compose.yml ]; then
+              docker-compose -f DockerCompose/docker-compose.yml pull
+              docker-compose -f DockerCompose/docker-compose.yml up -d
+            else
+              echo "docker-compose.yml not found in the DockerCompose directory."
+              exit 1
+            fi

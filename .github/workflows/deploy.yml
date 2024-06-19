@@ -11,32 +11,51 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2  # Fetches the entire repository code
+        uses: actions/checkout@v2
 
-      - name: Transfer repository files to EC2
-        uses: appleboy/scp-action@master
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.4
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "."  # Transfer all files from the current directory (root of the repository)
-          target: "/home/${{ secrets.EC2_USERNAME }}/project"  # Target directory on EC2 instance
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and push admin_frontend Docker image
-        working-directory: admin_frontend
+      - name: Install Docker
         run: |
-          docker build -t l00179208/sgproject:admin_frontend -f Dockerfiles/Dockerfile .
-          docker tag l00179208/sgproject:admin_frontend l00179208/sgproject:admin_frontend-$GITHUB_SHA
-          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker push l00179208/sgproject:admin_frontend-$GITHUB_SHA
+          sudo apt-get update
+          sudo apt-get install -y docker.io
 
-      - name: SSH deploy to EC2
+      - name: Build and push Docker images
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $DOCKER_USERNAME/sgproject:admin_frontend ./admin_frontend Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject:studio_ghibli_frontend ./frontend/studio-ghibli Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject:gateway ./backend/gateway Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject:courses ./backend/courses Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject:enrollment ./backend/enrollment Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject:customers ./backend/customers Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject:users ./backend/users Dockerfiles/Dockerfile .
+
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+          docker tag $DOCKER_USERNAME/sgproject:admin_frontend $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
+          docker tag $DOCKER_USERNAME/sgproject:studio_ghibli_frontend $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
+          docker tag $DOCKER_USERNAME/sgproject:gateway $DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG
+          docker tag $DOCKER_USERNAME/sgproject:courses $DOCKER_USERNAME/sgproject:courses-$IMAGE_TAG
+          docker tag $DOCKER_USERNAME/sgproject:enrollment $DOCKER_USERNAME/sgproject:enrollment-$IMAGE_TAG
+          docker tag $DOCKER_USERNAME/sgproject:customers $DOCKER_USERNAME/sgproject:customers-$IMAGE_TAG
+          docker tag $DOCKER_USERNAME/sgproject:users $DOCKER_USERNAME/sgproject:users-$IMAGE_TAG
+
+          docker push $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
+          docker push $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
+          docker push $DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG
+          docker push $DOCKER_USERNAME/sgproject:courses-$IMAGE_TAG
+          docker push $DOCKER_USERNAME/sgproject:enrollment-$IMAGE_TAG
+          docker push $DOCKER_USERNAME/sgproject:customers-$IMAGE_TAG
+          docker push $DOCKER_USERNAME/sgproject:users-$IMAGE_TAG
+
+      - name: SSH Deploy
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -44,13 +63,4 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           debug: true
           script: |
-            docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-            cd /home/${{ secrets.EC2_USERNAME }}/project
-            ls -R  # List contents on EC2 for debugging
-            if [ -f DockerCompose/docker-compose.yml ]; then
-              docker-compose -f DockerCompose/docker-compose.yml pull
-              docker-compose -f DockerCompose/docker-compose.yml up -d
-            else
-              echo "docker-compose.yml not found in the DockerCompose directory."
-              exit 1
-            fi
+            ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "IMAGE_TAG=${{ github.sha }} bash -s" < deploy.sh
