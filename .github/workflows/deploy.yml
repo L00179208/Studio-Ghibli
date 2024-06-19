@@ -25,13 +25,13 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $DOCKER_USERNAME/sgproject:admin_frontend ./admin_frontend Dockerfiles/Dockerfile .
-          docker build -t $DOCKER_USERNAME/sgproject:studio_ghibli_frontend ./frontend/studio-ghibli Dockerfiles/Dockerfile .
-          docker build -t $DOCKER_USERNAME/sgproject:gateway ./backend/gateway Dockerfiles/Dockerfile .
-          docker build -t $DOCKER_USERNAME/sgproject:courses ./backend/courses Dockerfiles/Dockerfile .
-          docker build -t $DOCKER_USERNAME/sgproject:enrollment ./backend/enrollment Dockerfiles/Dockerfile .
-          docker build -t $DOCKER_USERNAME/sgproject:customers ./backend/customers Dockerfiles/Dockerfile .
-          docker build -t $DOCKER_USERNAME/sgproject:users ./backend/users Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject:admin_frontend -f Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject:studio_ghibli_frontend -f Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject:gateway -f Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject:courses -f Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject:enrollment -f Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject:customers -f Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject:users -f Dockerfiles/Dockerfile .
 
           echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
