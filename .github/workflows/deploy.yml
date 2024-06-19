@@ -13,9 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: List directory contents
-        run: ls -R        
-
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -26,8 +23,9 @@ jobs:
         working-directory: admin_frontend
         run: |
           docker build -t l00179208/sgproject:admin_frontend -f Dockerfiles/Dockerfile .
-          docker tag l00179208/sgproject:admin_frontend l00179208/sgproject:$GITHUB_SHA
-          docker push l00179208/sgproject:$GITHUB_SHA
+          docker tag l00179208/sgproject:admin_frontend l00179208/sgproject:admin_frontend-$GITHUB_SHA
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          docker push l00179208/sgproject:admin_frontend-$GITHUB_SHA
 
       - name: SSH deploy to EC2
         uses: appleboy/ssh-action@master
@@ -38,6 +36,11 @@ jobs:
           debug: true
           script: |
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-            docker-compose -f DockerCompose/docker-compose.yml pull
-            docker-compose -f DockerCompose/docker-compose.yml up -d
-
+            ls -R  # List contents for debugging
+            if [ -f DockerCompose/docker-compose.yml ]; then
+              docker-compose -f DockerCompose/docker-compose.yml pull
+              docker-compose -f DockerCompose/docker-compose.yml up -d
+            else
+              echo "docker-compose.yml not found in the DockerCompose directory."
+              exit 1
+            fi
