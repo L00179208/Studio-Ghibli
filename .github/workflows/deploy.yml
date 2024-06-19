@@ -46,15 +46,15 @@ jobs:
           docker build -t $DOCKER_USERNAME/andsgproject/courses:$IMAGE_TAG -f Dockerfiles/Dockerfile .
           cd ..
 
-          cd backend/enrollment
+          cd ./backend/enrollment
           docker build -t $DOCKER_USERNAME/andsgproject/enrollment:$IMAGE_TAG -f Dockerfiles/Dockerfile .
           cd ..
 
-          cd backend/customers
+          cd ./backend/customers
           docker build -t $DOCKER_USERNAME/andsgproject/customers:$IMAGE_TAG -f Dockerfiles/Dockerfile .
           cd ..
 
-          cd backend/users
+          cd ./backend/users
           docker build -t $DOCKER_USERNAME/andsgproject/users:$IMAGE_TAG -f Dockerfiles/Dockerfile .
           cd ..
 
