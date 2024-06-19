@@ -35,11 +35,11 @@ jobs:
 
             if [ -d "$service_directory" ]; then
               cd $service_directory
-              docker build -t $DOCKER_USERNAME/sgproject:admin_frontend -f Dockerfiles/Dockerfile .
-              docker tag $DOCKER_USERNAME/sgproject:admin_frontend $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
+              docker build -t $DOCKER_USERNAME/sgproject:$service_name -f Dockerfiles/Dockerfile .
+              docker tag $DOCKER_USERNAME/sgproject:$service_name $DOCKER_USERNAME/sgproject:$service_name-$IMAGE_TAG
               echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-              docker push $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
-              cd ../..  # Move back to the root directory after building
+              docker push $DOCKER_USERNAME/sgproject:$service_name-$IMAGE_TAG
+              cd $( [[ "$service_directory" == "frontend/studio-ghibli" ]] && echo "../.." || echo ".." )
             else
               echo "Directory $service_directory not found."
               exit 1
