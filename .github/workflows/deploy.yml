@@ -22,8 +22,10 @@ jobs:
       - name: Build and push admin_frontend Docker image
         working-directory: admin_frontend
         run: |
-          docker build -t l00179208/sgproject/admin_frontend:$GITHUB_SHA -f Dockerfiles/Dockerfile .
-          docker push l00179208/sgproject/admin_frontend:$GITHUB_SHA
+          docker build -t l00179208/sgproject:admin_frontend -f Dockerfiles/Dockerfile .
+          docker tag l00179208/sgproject:admin_frontend l00179208/sgproject:admin_frontend-$GITHUB_SHA
+          docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_PASSWORD }}
+          docker push l00179208/sgproject:admin_frontend-$GITHUB_SHA
 
       - name: Build and push studio_ghibli Docker image
         working-directory: frontend/studio_ghibli
