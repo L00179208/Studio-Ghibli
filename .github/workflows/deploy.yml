@@ -11,7 +11,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2  # Fetches the entire repository code
+
+      - name: Transfer repository files to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "."  # Transfer all files from the current directory (root of the repository)
+          target: "/home/${{ secrets.EC2_USERNAME }}/project"  # Target directory on EC2 instance
 
       - name: Login to Docker Hub
         uses: docker/login-action@v2
@@ -36,7 +45,8 @@ jobs:
           debug: true
           script: |
             docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-            ls -R  # List contents for debugging
+            cd /home/${{ secrets.EC2_USERNAME }}/project
+            ls -R  # List contents on EC2 for debugging
             if [ -f DockerCompose/docker-compose.yml ]; then
               docker-compose -f DockerCompose/docker-compose.yml pull
               docker-compose -f DockerCompose/docker-compose.yml up -d
