@@ -31,42 +31,42 @@ jobs:
         # Example assumes Dockerfile is located in 'Dockerfiles/Dockerfile'
         run: |
           cd admin_frontend
-          docker build -t $DOCKER_USERNAME/andsgproject/admin_frontend:$IMAGE_TAG -f Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject/admin_frontend:$IMAGE_TAG -f Dockerfiles/Dockerfile .
           cd ..
 
           cd frontend/studio-ghibli
-          docker build -t $DOCKER_USERNAME/andsgproject/studio_ghibli_frontend:$IMAGE_TAG -f Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject/studio_ghibli_frontend:$IMAGE_TAG -f Dockerfiles/Dockerfile .
           cd ..
 
           cd backend/gateway
-          docker build -t $DOCKER_USERNAME/andsgproject/gateway:$IMAGE_TAG -f Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject/gateway:$IMAGE_TAG -f Dockerfiles/Dockerfile .
           cd ..
 
           cd backend/courses
-          docker build -t $DOCKER_USERNAME/andsgproject/courses:$IMAGE_TAG -f Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject/courses:$IMAGE_TAG -f Dockerfiles/Dockerfile .
           cd ..
 
           cd ./backend/enrollment
-          docker build -t $DOCKER_USERNAME/andsgproject/enrollment:$IMAGE_TAG -f Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject/enrollment:$IMAGE_TAG -f Dockerfiles/Dockerfile .
           cd ..
 
           cd ./backend/customers
-          docker build -t $DOCKER_USERNAME/andsgproject/customers:$IMAGE_TAG -f Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject/customers:$IMAGE_TAG -f Dockerfiles/Dockerfile .
           cd ..
 
           cd ./backend/users
-          docker build -t $DOCKER_USERNAME/andsgproject/users:$IMAGE_TAG -f Dockerfiles/Dockerfile .
+          docker build -t $DOCKER_USERNAME/sgproject/users:$IMAGE_TAG -f Dockerfiles/Dockerfile .
           cd ..
 
           echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
-          docker push $DOCKER_USERNAME/andsgproject/admin_frontend:$IMAGE_TAG
-          docker push $DOCKER_USERNAME/andsgproject/studio_ghibli_frontend:$IMAGE_TAG
-          docker push $DOCKER_USERNAME/andsgproject/gateway:$IMAGE_TAG
-          docker push $DOCKER_USERNAME/andsgproject/courses:$IMAGE_TAG
-          docker push $DOCKER_USERNAME/andsgproject/enrollment:$IMAGE_TAG
-          docker push $DOCKER_USERNAME/andsgproject/customers:$IMAGE_TAG
-          docker push $DOCKER_USERNAME/andsgproject/users:$IMAGE_TAG
+          docker push $DOCKER_USERNAME/sgproject/admin_frontend:$IMAGE_TAG
+          docker push $DOCKER_USERNAME/sgproject/studio_ghibli_frontend:$IMAGE_TAG
+          docker push $DOCKER_USERNAME/sgproject/gateway:$IMAGE_TAG
+          docker push $DOCKER_USERNAME/sgproject/courses:$IMAGE_TAG
+          docker push $DOCKER_USERNAME/sgproject/enrollment:$IMAGE_TAG
+          docker push $DOCKER_USERNAME/sgproject/customers:$IMAGE_TAG
+          docker push $DOCKER_USERNAME/sgproject/users:$IMAGE_TAG
 
       - name: SSH Deploy
         uses: appleboy/ssh-action@master
