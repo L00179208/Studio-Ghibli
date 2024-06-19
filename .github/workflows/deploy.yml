@@ -23,7 +23,7 @@ jobs:
         working-directory: admin_frontend
         run: |
           docker build -t l00179208/sgproject/admin_frontend -f Dockerfiles/Dockerfile .
-          docker tag l00179208/sgproject:admin_frontend l00179208/sgproject/admin_frontend:$GITHUB_SHA
+          docker tag l00179208/sgproject:admin_frontend l00179208/sgproject:admin_frontend:$GITHUB_SHA
           docker push l00179208/sgproject:admin_frontend:$GITHUB_SHA
 
       - name: SSH deploy to EC2
