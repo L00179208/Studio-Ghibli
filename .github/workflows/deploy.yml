@@ -24,49 +24,33 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           IMAGE_TAG: ${{ github.sha }}
-        # Execute commands in each directory
-        # Replace 'admin_frontend', 'studio-ghibli', etc., with your actual directory names
-        # Ensure the Dockerfiles are correctly located in each directory
-        # Adjust docker build and tagging as per your Dockerfile structure
-        # Example assumes Dockerfile is located in 'Dockerfiles/Dockerfile'
         run: |
-          cd admin_frontend
-          docker build -t $DOCKER_USERNAME/sgproject/admin_frontend:$IMAGE_TAG -f Dockerfiles/Dockerfile .
-          cd ..
+          set -e  # Exit immediately if a command exits with a non-zero status
 
-          cd frontend/studio-ghibli
-          docker build -t $DOCKER_USERNAME/sgproject/studio_ghibli_frontend:$IMAGE_TAG -f Dockerfiles/Dockerfile .
-          cd ..
+          # Build and push Docker images for each service
+          build_and_push() {
+            local service_directory=$1
+            local service_name=$2
 
-          cd backend/gateway
-          docker build -t $DOCKER_USERNAME/sgproject/gateway:$IMAGE_TAG -f Dockerfiles/Dockerfile .
-          cd ..
+            if [ -d "$service_directory" ]; then
+              cd $service_directory
+              docker build -t $DOCKER_USERNAME/sgproject/$service_name:$IMAGE_TAG -f Dockerfiles/Dockerfile .
+              echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+              docker push $DOCKER_USERNAME/sgproject/$service_name:$IMAGE_TAG
+              cd ../..  # Move back to the root directory after building
+            else
+              echo "Directory $service_directory not found."
+              exit 1
+            fi
+          }
 
-          cd backend/courses
-          docker build -t $DOCKER_USERNAME/sgproject/courses:$IMAGE_TAG -f Dockerfiles/Dockerfile .
-          cd ..
-
-          cd ./backend/enrollment
-          docker build -t $DOCKER_USERNAME/sgproject/enrollment:$IMAGE_TAG -f Dockerfiles/Dockerfile .
-          cd ..
-
-          cd ./backend/customers
-          docker build -t $DOCKER_USERNAME/sgproject/customers:$IMAGE_TAG -f Dockerfiles/Dockerfile .
-          cd ..
-
-          cd ./backend/users
-          docker build -t $DOCKER_USERNAME/sgproject/users:$IMAGE_TAG -f Dockerfiles/Dockerfile .
-          cd ..
-
-          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-
-          docker push $DOCKER_USERNAME/sgproject/admin_frontend:$IMAGE_TAG
-          docker push $DOCKER_USERNAME/sgproject/studio_ghibli_frontend:$IMAGE_TAG
-          docker push $DOCKER_USERNAME/sgproject/gateway:$IMAGE_TAG
-          docker push $DOCKER_USERNAME/sgproject/courses:$IMAGE_TAG
-          docker push $DOCKER_USERNAME/sgproject/enrollment:$IMAGE_TAG
-          docker push $DOCKER_USERNAME/sgproject/customers:$IMAGE_TAG
-          docker push $DOCKER_USERNAME/sgproject/users:$IMAGE_TAG
+          build_and_push "admin_frontend" "admin_frontend"
+          build_and_push "frontend/studio-ghibli" "studio_ghibli_frontend"
+          build_and_push "backend/gateway" "gateway"
+          build_and_push "backend/courses" "courses"
+          build_and_push "backend/enrollment" "enrollment"
+          build_and_push "backend/customers" "customers"
+          build_and_push "backend/users" "users"
 
       - name: SSH Deploy
         uses: appleboy/ssh-action@master
