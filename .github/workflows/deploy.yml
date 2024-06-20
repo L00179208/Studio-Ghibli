@@ -66,6 +66,6 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          run: |
+          script: |
             ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "bash -s" < deploy.sh $IMAGE_TAG $DOCKER_USERNAME $DOCKER_PASSWORD
 
