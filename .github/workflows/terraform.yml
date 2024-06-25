@@ -63,7 +63,9 @@ jobs:
   terraform:
     name: 'Terraform Plan and Apply'
     runs-on: ubuntu-latest
-
+    permissions: write-all
+    outputs:
+      instance_public_ip: ${{ steps.tfoutput.outputs.instance_public_ip }}
     steps:
     - name: 'Checkout Repository'
       uses: actions/checkout@v2
@@ -105,7 +107,7 @@ jobs:
       run: terraform apply -auto-approve
 
     - name: 'Get Terraform Output'
-      id: output
+      id: tfoutput
       working-directory: ./iac
       run: echo "::set-output name=instance_public_ip::$(terraform output -raw instance_public_ip)"
 
@@ -127,6 +129,7 @@ jobs:
         SERVER_PUBLIC_IP: ${{ needs.terraform.outputs.instance_public_ip }}
       run: |
         echo "Connecting to $SERVER_PUBLIC_IP"
+         echo "Connecting to ${{ env.SERVER_PUBLIC_IP }}"
         ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ env.SERVER_PUBLIC_IP }}
 
     - name: Pull Docker images
