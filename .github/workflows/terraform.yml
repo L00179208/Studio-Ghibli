@@ -53,12 +53,12 @@ jobs:
           }
 
           build_and_push "admin_frontend" "admin_frontend"
-          build_and_push "frontend/studio-ghibli" "studio_ghibli_frontend"
-          build_and_push "backend/gateway" "gateway"
-          build_and_push "backend/courses" "courses"
-          build_and_push "backend/enrollment" "enrollment"
-          build_and_push "backend/customers" "customers"
-          build_and_push "backend/users" "users"
+          # build_and_push "frontend/studio-ghibli" "studio_ghibli_frontend"
+          # build_and_push "backend/gateway" "gateway"
+          # build_and_push "backend/courses" "courses"
+          # build_and_push "backend/enrollment" "enrollment"
+          # build_and_push "backend/customers" "customers"
+          # build_and_push "backend/users" "users"
 
   terraform:
     name: 'Terraform Plan and Apply'
@@ -111,7 +111,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [terraform,build-and-push-images]  # This job depends on the successful completion of the 'terraform' job
+    needs: terraform  # This job depends on the successful completion of the 'terraform' job
 
     steps:
     - name: Checkout code
@@ -126,30 +126,39 @@ jobs:
       env:
         SERVER_PUBLIC_IP: ${{ needs.terraform.outputs.instance_public_ip }}
       run: |
+        echo "Connecting to $SERVER_PUBLIC_IP"
         ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ env.SERVER_PUBLIC_IP }}
 
     - name: Pull Docker images
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         IMAGE_TAG: ${{ github.sha }}
+        SERVER_PUBLIC_IP: ${{ needs.terraform.outputs.instance_public_ip }}
       run: |
-        docker pull $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
-        docker pull $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
-        docker pull $DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG
-        docker pull $DOCKER_USERNAME/sgproject:courses-$IMAGE_TAG
-        docker pull $DOCKER_USERNAME/sgproject:enrollment-$IMAGE_TAG
-        docker pull $DOCKER_USERNAME/sgproject:customers-$IMAGE_TAG
-        docker pull $DOCKER_USERNAME/sgproject:users-$IMAGE_TAG
+        echo "Pulling Docker images on $SERVER_PUBLIC_IP"
+        ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ env.SERVER_PUBLIC_IP }} << EOF
+          docker pull $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
+          # docker pull $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
+          # docker pull $DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG
+          # docker pull $DOCKER_USERNAME/sgproject:courses-$IMAGE_TAG
+          # docker pull $DOCKER_USERNAME/sgproject:enrollment-$IMAGE_TAG
+          # docker pull $DOCKER_USERNAME/sgproject:customers-$IMAGE_TAG
+          # docker pull $DOCKER_USERNAME/sgproject:users-$IMAGE_TAG
+        EOF
 
     - name: Run Docker containers
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         IMAGE_TAG: ${{ github.sha }}
+        SERVER_PUBLIC_IP: ${{ needs.terraform.outputs.instance_public_ip }}
       run: |
-        docker run -d -p 80:80 $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
-        docker run -d -p 8080:8080 $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
-        docker run -d -p 8880:8880 $DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG
-        docker run -d -p 8881:8881 $DOCKER_USERNAME/sgproject:courses-$IMAGE_TAG
-        docker run -d -p 8882:8882 $DOCKER_USERNAME/sgproject:enrollment-$IMAGE_TAG
-        docker run -d -p 8883:8883 $DOCKER_USERNAME/sgproject:customers-$IMAGE_TAG
-        docker run -d -p 8884:8884 $DOCKER_USERNAME/sgproject:users-$IMAGE_TAG
+        echo "Running Docker containers on $SERVER_PUBLIC_IP"
+        ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ env.SERVER_PUBLIC_IP }} << EOF
+          #docker run -d -p 80:80 $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
+          docker run -d -p 8080:8080 $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
+          # docker run -d -p 8880:8880 $DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG
+          # docker run -d -p 8881:8881 $DOCKER_USERNAME/sgproject:courses-$IMAGE_TAG
+          # docker run -d -p 8882:8882 $DOCKER_USERNAME/sgproject:enrollment-$IMAGE_TAG
+          # docker run -d -p 8883:8883 $DOCKER_USERNAME/sgproject:customers-$IMAGE_TAG
+          # docker run -d -p 8884:8884 $DOCKER_USERNAME/sgproject:users-$IMAGE_TAG
+        EOF
