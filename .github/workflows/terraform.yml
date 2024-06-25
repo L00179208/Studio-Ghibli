@@ -31,19 +31,23 @@ jobs:
         terrascan version
 
     - name: Run Terrascan
-      run: terrascan scan -i terraform -d iac
+      run: terrascan scan -i terraform -d ./iac
 
     - name: 'Terraform Init'
+      working-directory: ./iac
       run: terraform init
 
     - name: 'Terraform Validate'
+      working-directory: ./iac
       run: terraform validate
 
     - name: 'Terraform Plan'
+      working-directory: ./iac
       run: terraform plan
 
     - name: 'Terraform Apply'
       if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+      working-directory: ./iac
       run: terraform apply -auto-approve
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
