@@ -63,9 +63,8 @@ jobs:
   terraform:
     name: 'Terraform Plan and Apply'
     runs-on: ubuntu-latest
-    permissions: write-all
     outputs:
-      instance_public_ip: ${{ steps.tfoutput.outputs.instance_public_ip }}
+      instance_public_ip: ${{ steps.get_ip.outputs.instance_public_ip }}
     steps:
     - name: 'Checkout Repository'
       uses: actions/checkout@v2
@@ -107,7 +106,7 @@ jobs:
       run: terraform apply -auto-approve
 
     - name: 'Get Terraform Output'
-      id: tfoutput
+      id: get_ip
       working-directory: ./iac
       run: echo "::set-output name=instance_public_ip::$(terraform output -raw instance_public_ip)"
 
@@ -129,8 +128,7 @@ jobs:
         SERVER_PUBLIC_IP: ${{ needs.terraform.outputs.instance_public_ip }}
       run: |
         echo "Connecting to $SERVER_PUBLIC_IP"
-         echo "Connecting to ${{ env.SERVER_PUBLIC_IP }}"
-        ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ env.SERVER_PUBLIC_IP }}
+        ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@$SERVER_PUBLIC_IP
 
     - name: Pull Docker images
       env:
@@ -139,7 +137,7 @@ jobs:
         SERVER_PUBLIC_IP: ${{ needs.terraform.outputs.instance_public_ip }}
       run: |
         echo "Pulling Docker images on $SERVER_PUBLIC_IP"
-        ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ env.SERVER_PUBLIC_IP }} << EOF
+        ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@$SERVER_PUBLIC_IP << EOF
           docker pull $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
           # docker pull $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
           # docker pull $DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG
@@ -156,8 +154,8 @@ jobs:
         SERVER_PUBLIC_IP: ${{ needs.terraform.outputs.instance_public_ip }}
       run: |
         echo "Running Docker containers on $SERVER_PUBLIC_IP"
-        ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ env.SERVER_PUBLIC_IP }} << EOF
-          #docker run -d -p 80:80 $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
+        ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@$SERVER_PUBLIC_IP << EOF
+          # docker run -d -p 80:80 $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
           docker run -d -p 8080:8080 $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
           # docker run -d -p 8880:8880 $DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG
           # docker run -d -p 8881:8881 $DOCKER_USERNAME/sgproject:courses-$IMAGE_TAG
