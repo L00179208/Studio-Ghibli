@@ -31,7 +31,7 @@ jobs:
         terrascan version
 
     - name: Run Terrascan
-      run: terrascan scan -i terraform
+      run: terrascan scan -i terraform -d iac
 
     - name: 'Terraform Init'
       run: terraform init
