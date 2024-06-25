@@ -9,6 +9,54 @@ on:
       - master
 
 jobs:
+  build-and-push-images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2  # Fetches the entire repository code    
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker images
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+        
+          set -e  # Exit immediately if a command exits with a non-zero status
+
+          # Build and push Docker images for each service
+          build_and_push() {
+            local service_directory=$1
+            local service_name=$2
+
+            if [ -d "$service_directory" ]; then
+              cd $service_directory
+              docker build -t $DOCKER_USERNAME/sgproject:$service_name -f Dockerfiles/Dockerfile .
+              docker tag $DOCKER_USERNAME/sgproject:$service_name $DOCKER_USERNAME/sgproject:$service_name-$IMAGE_TAG
+              echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+              docker push $DOCKER_USERNAME/sgproject:$service_name-$IMAGE_TAG
+              cd $( [[ "$service_directory" == "frontend/studio-ghibli" || "$service_directory" == "backend"* ]] && echo "../.." || echo ".." )
+            else
+              echo "Directory $service_directory not found."
+              exit 1
+            fi
+          }
+
+          build_and_push "admin_frontend" "admin_frontend"
+          build_and_push "frontend/studio-ghibli" "studio_ghibli_frontend"
+          build_and_push "backend/gateway" "gateway"
+          build_and_push "backend/courses" "courses"
+          build_and_push "backend/enrollment" "enrollment"
+          build_and_push "backend/customers" "customers"
+          build_and_push "backend/users" "users"
+
   terraform:
     name: 'Terraform Plan and Apply'
     runs-on: ubuntu-latest
