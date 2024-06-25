@@ -1,0 +1,29 @@
+name: Terraform Security Scan
+
+on:
+  push:
+    branches: [ master ]  # Change to your desired branch(es)
+
+jobs:
+  terrascan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Terrascan
+        uses: tenable/terrascan-action@v1
+        with:
+          terrascan_version: 'latest'  # Or specify a specific version
+
+      - name: Run Terrascan Scan
+        run: terrascan scan ./iac
+
+      - name: Upload SARIF results (optional)
+        uses: reviewdog/reviewdog@v1
+        with:
+          name: Terrascan
+          reporter: github-check
+          level: warning  # Change to desired severity level
+          fail_ci: true  # Fail build if vulnerabilities are found
+          input_format: terrascan  # Specify Terrascan output format
+          github_token: ${{ secrets.GITHUB_TOKEN }}
