@@ -1,7 +1,3 @@
-provider "aws" {
-  region = "eu-north-1"
-}
-
 module "network" {
   source             = "./modules/network"
   vpc_cidr           = var.vpc_cidr
