@@ -108,7 +108,9 @@ jobs:
     - name: 'Get Terraform Output'
       id: get_ip
       working-directory: ./iac
-      run: echo "::set-output name=instance_public_ip::$(terraform output -raw instance_public_ip)"
+      run: |
+        instance_ip=$(terraform output -raw instance_public_ip)
+        echo "::set-output name=instance_public_ip::$instance_ip"
 
   deploy:
     runs-on: ubuntu-latest
