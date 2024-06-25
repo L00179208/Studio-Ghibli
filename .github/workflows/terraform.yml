@@ -28,7 +28,6 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-        
           set -e  # Exit immediately if a command exits with a non-zero status
 
           # Build and push Docker images for each service
@@ -122,14 +121,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Set SSH key environment variable
+      run: echo "SSH_PRIVATE_KEY=${{ secrets.SSH_PRIVATE_KEY }}" >> $GITHUB_ENV
+
     - name: Download SSH key
-      if: ${{ secrets.SSH_PRIVATE_KEY }}
+      if: env.SSH_PRIVATE_KEY
       run: |
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > deploy_key
+        echo "${{ env.SSH_PRIVATE_KEY }}" > deploy_key
         chmod 600 deploy_key
 
     - name: Connect to EC2 instance via SSH
-      if: ${{ secrets.SSH_PRIVATE_KEY }}
+      if: env.SSH_PRIVATE_KEY
       run: |
         ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ secrets.EC2_IP }}
 
