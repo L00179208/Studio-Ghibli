@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - master
+
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -18,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2  # Fetches the entire repository code    
+        uses: actions/checkout@v2
 
       - name: Login to Docker Hub
         uses: docker/login-action@v2
@@ -32,9 +33,8 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          set -e  # Exit immediately if a command exits with a non-zero status
+          set -e
 
-          # Build and push Docker images for each service
           build_and_push() {
             local service_directory=$1
             local service_name=$2
@@ -53,6 +53,7 @@ jobs:
           }
 
           build_and_push "admin_frontend" "admin_frontend"
+          # Uncomment these lines as needed
           # build_and_push "frontend/studio-ghibli" "studio_ghibli_frontend"
           # build_and_push "backend/gateway" "gateway"
           # build_and_push "backend/courses" "courses"
@@ -87,7 +88,7 @@ jobs:
 
     - name: 'Run Terrascan'
       run: terrascan scan -i terraform -d ./iac
-      continue-on-error: true # Temporarily allow pipeline to continue on error for debugging
+      continue-on-error: true
 
     - name: 'Terraform Init'
       working-directory: ./iac
@@ -114,7 +115,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: terraform  # This job depends on the successful completion of the 'terraform' job
+    needs: terraform
 
     steps:
     - name: Checkout code
@@ -126,18 +127,22 @@ jobs:
         chmod 600 deploy_key
 
     - name: Connect to EC2 instance via SSH
+      env:
+        SERVER_PUBLIC_IP: ${{ env.instance_public_ip }}
       run: |
-        echo "Connecting to $instance_public_ip"
-        ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@$instance_public_ip
+        echo "Connecting to $SERVER_PUBLIC_IP"
+        ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@$SERVER_PUBLIC_IP
 
     - name: Pull Docker images
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         IMAGE_TAG: ${{ github.sha }}
+        SERVER_PUBLIC_IP: ${{ env.instance_public_ip }}
       run: |
-        echo "Pulling Docker images on $instance_public_ip"
-        ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@$instance_public_ip << EOF
+        echo "Pulling Docker images on $SERVER_PUBLIC_IP"
+        ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@$SERVER_PUBLIC_IP << EOF
           docker pull $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
+          # Uncomment these lines as needed
           # docker pull $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
           # docker pull $DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG
           # docker pull $DOCKER_USERNAME/sgproject:courses-$IMAGE_TAG
@@ -150,9 +155,11 @@ jobs:
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         IMAGE_TAG: ${{ github.sha }}
+        SERVER_PUBLIC_IP: ${{ env.instance_public_ip }}
       run: |
-        echo "Running Docker containers on $instance_public_ip"
-        ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@$instance_public_ip << EOF
+        echo "Running Docker containers on $SERVER_PUBLIC_IP"
+        ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@$SERVER_PUBLIC_IP << EOF
+          # Uncomment these lines as needed
           # docker run -d -p 80:80 $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
           docker run -d -p 8080:8080 $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
           # docker run -d -p 8880:8880 $DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG
