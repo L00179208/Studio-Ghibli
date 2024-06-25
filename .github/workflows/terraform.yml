@@ -63,8 +63,8 @@ jobs:
   terraform:
     name: 'Terraform Plan and Apply'
     runs-on: ubuntu-latest
-    # outputs:
-    #   instance_public_ip: ${{ steps.get_ip.outputs.instance_public_ip }}
+    outputs:
+      ec2_instance_public_ip: ${{ steps.get_ip.outputs.instance_public_ip }}
     steps:
     - name: 'Checkout Repository'
       uses: actions/checkout@v2
@@ -109,7 +109,7 @@ jobs:
       id: get_ip
       working-directory: ./iac
       run: |
-        instance_ip=$(terraform output -raw instance_public_ip)
+        instance_ip=$(terraform output instance_public_ip)
         echo "::set-output name=instance_public_ip::$instance_ip"
 
   deploy:
@@ -127,7 +127,7 @@ jobs:
 
     - name: Connect to EC2 instance via SSH
       env:
-        SERVER_PUBLIC_IP: ${{ needs.terraform.outputs.instance_public_ip }}
+        SERVER_PUBLIC_IP: ${{ needs.terraform.outputs.ec2_instance_public_ip }}
       run: |
         echo "Connecting to $SERVER_PUBLIC_IP"
         ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@$SERVER_PUBLIC_IP
