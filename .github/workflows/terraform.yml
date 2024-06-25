@@ -22,16 +22,12 @@ jobs:
       with:
         terraform_version: 1.0.9
 
-    # - name: Install Terrascan
-    #   uses: tenable/terrascan-action@v1
-    #   with:
-    #     terrascan_version: 'latest'  # Or specify a specific version
-
     - name: Install Terrascan
       run: |
         curl -L https://github.com/tenable/terrascan/releases/latest/download/terrascan-linux-amd64 -o terrascan
         chmod +x terrascan
-        sudo mv terrascan /usr/local/bin/    
+        sudo mv terrascan /usr/local/bin/terrascan
+        terrascan version
 
     - name: Run Terrascan
       run: terrascan scan -i terraform
