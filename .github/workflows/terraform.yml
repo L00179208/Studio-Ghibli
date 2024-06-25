@@ -122,16 +122,16 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Download SSH key (optional)
-      if: ${{ secrets.SSH_PRIVATE_KEY }}
+      if: ${{ secrets.SSH_PRIVATE_KEY }}  # Check if the secret exists
       env:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}  # Access the secret value
       run: |
         echo "$SSH_PRIVATE_KEY" >> deploy_key
         chmod 600 deploy_key
 
     - name: Connect to EC2 instance via SSH
       # This example uses SSH with a pre-downloaded key 
-      if: ${{ secrets.SSH_PRIVATE_KEY }}
+      if: ${{ secrets.SSH_PRIVATE_KEY }}  # Check if the secret exists
       run: |
         ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ secrets.EC2_IP }}
 
