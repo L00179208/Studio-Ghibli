@@ -1,5 +1,5 @@
 module "common_security_group" {
-  source      = "./common/security_group"
+  source      = "./security_group"
   vpc_id      = module.common_vpc.vpc_id
   name        = "stg-app-security-group"
   description = "Security group for the application"
