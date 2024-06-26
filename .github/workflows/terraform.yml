@@ -109,7 +109,9 @@ jobs:
       - name: 'Get Terraform Output'
         id: get_ip
         working-directory: ./iac
-        run: echo "instance_public_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_ENV
+        run: |
+          echo "instance_public_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_ENV
+          echo "Connecting to ${{ env.instance_public_ip }}"
 
   deploy:
     runs-on: ubuntu-latest
