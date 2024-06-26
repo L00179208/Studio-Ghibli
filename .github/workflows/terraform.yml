@@ -124,9 +124,10 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > deploy_key
           chmod 600 deploy_key
 
+      - name: Set SERVER_PUBLIC_IP
+        run: echo "SERVER_PUBLIC_IP=${{ needs.terraform.outputs.instance_public_ip }}" >> $GITHUB_ENV
+
       - name: Connect to EC2 instance via SSH
-        env:
-          SERVER_PUBLIC_IP: ${{ env.instance_public_ip }}
         run: |
           echo "Connecting to $SERVER_PUBLIC_IP"
           ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@$SERVER_PUBLIC_IP
@@ -135,7 +136,6 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           IMAGE_TAG: ${{ github.sha }}
-          SERVER_PUBLIC_IP: ${{ env.instance_public_ip }}
         run: |
           echo "Pulling Docker images on $SERVER_PUBLIC_IP"
           ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@$SERVER_PUBLIC_IP << EOF
@@ -153,7 +153,6 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           IMAGE_TAG: ${{ github.sha }}
-          SERVER_PUBLIC_IP: ${{ env.instance_public_ip }}
         run: |
           echo "Running Docker containers on $SERVER_PUBLIC_IP"
           ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@$SERVER_PUBLIC_IP << EOF
