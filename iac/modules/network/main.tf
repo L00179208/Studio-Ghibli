@@ -22,10 +22,9 @@ resource "aws_internet_gateway" "stg_app_gateway" {
   tags = {
     Name = "STG App Gateway"
   }
-
 }
 
-resource "aws_route_table" "sg_app_route_table" {
+resource "aws_route_table" "public_route_table" {
   vpc_id = aws_vpc.vpc.id
 
   route {
@@ -33,6 +32,14 @@ resource "aws_route_table" "sg_app_route_table" {
     gateway_id = aws_internet_gateway.stg_app_gateway.id
   }
 
+  tags = {
+    Name = "STG Public Route Table"
+  }
+}
+
+resource "aws_route_table_association" "public_subnet_association" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_route_table.id
 }
 
 resource "aws_security_group" "sg" {
@@ -74,12 +81,14 @@ resource "aws_security_group" "sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
     from_port   = 9090
     to_port     = 9090
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   egress {
     from_port   = 0
     to_port     = 0
