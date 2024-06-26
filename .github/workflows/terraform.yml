@@ -65,7 +65,7 @@ jobs:
     name: 'Terraform Plan and Apply'
     runs-on: ubuntu-latest
     outputs:
-      instance_public_ip: ${{ steps.get_ip.outputs.instance_public_ip }}
+      target_ec2_ip: ${{ steps.get_ip.outputs.target_ip }}
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v2
@@ -104,17 +104,11 @@ jobs:
 
       - name: 'Terraform Apply'
         working-directory: ./iac
-        id: apply
-        run: terraform apply -auto-approve
-
-      - name: 'Get Terraform Output'
         id: get_ip
-        working-directory: ./iac
         run: |
-          instance_ip=$(terraform output -raw instance_public_ip)
-          echo "instance_public_ip=$instance_ip"
-          env:
-            INSTANCE_PUBLIC_IP: $instance_ip
+          terraform apply -auto-approve
+          instance_ip=$(terraform output instance_public_ip)
+          echo "::set-output name=target_ip::$instance_ip"
 
   deploy:
     runs-on: ubuntu-latest
@@ -131,8 +125,8 @@ jobs:
 
       - name: Connect to EC2 instance via SSH
         run: |
-          echo "Connecting to ${{ env.INSTANCE_PUBLIC_IP }}"
-          ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ needs.terraform-build.outputs.instance_public_ip }}
+          echo "Connecting to ${{ needs.terraform-build.outputs.target_ec2_ip }}"
+          ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }}
 
       - name: Pull Docker images
         env:
