@@ -30,7 +30,7 @@ resource "aws_route_table" "sg_app_route_table" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.sg_app_gayeway.id
+    gateway_id = aws_internet_gateway.stg_app_gateway.id
   }
 
 }
