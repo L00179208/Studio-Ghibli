@@ -2,7 +2,7 @@ resource "aws_vpc" "vpc" {
   cidr_block = var.vpc_cidr
 
   tags = {
-    Name = "main_vpc"
+    Name = "STG Main VPC"
   }
 }
 
@@ -12,13 +12,32 @@ resource "aws_subnet" "public_subnet" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "public_subnet"
+    Name = "STG Public Subnet"
   }
+}
+
+resource "aws_internet_gateway" "stg_app_gateway" {
+  vpc_id = aws_vpc.vpc.id
+
+  tags = {
+    Name = "STG App Gateway"
+  }
+
+}
+
+resource "aws_route_table" "sg_app_route_table" {
+  vpc_id = aws_vpc.vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.sg_app_gayeway.id
+  }
+
 }
 
 resource "aws_security_group" "sg" {
   name        = var.sg_name
-  description = "Security group for EC2 instance"
+  description = "Security group for STG EC2 instance"
   vpc_id      = aws_vpc.vpc.id
 
   ingress {
