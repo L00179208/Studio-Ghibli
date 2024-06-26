@@ -125,7 +125,7 @@ jobs:
 
       - name: Connect to EC2 instance via SSH
         run: |
-          echo "Connecting to ${{ needs.terraform-build.outputs.target_ec2_ip }}"
+          echo "Connecting to $target_ip"
           ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }}
 
       - name: Pull Docker images
