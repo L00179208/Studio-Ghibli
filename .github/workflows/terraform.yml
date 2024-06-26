@@ -65,7 +65,7 @@ jobs:
     name: 'Terraform Plan and Apply'
     runs-on: ubuntu-latest
     outputs:
-      instance_public_ip: ${{ steps.get_ip.outputs.targetIP }}
+      instance_public_ip: ${{ steps.get_ip.outputs.instance_public_ip }}
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v2
@@ -104,17 +104,16 @@ jobs:
 
       - name: 'Terraform Apply'
         working-directory: ./iac
-        id: get_ip
-        run: |
-          terraform apply -auto-approve
-          TARGET_IP=$(terraform output instance_public_ip)
-          echo "::set-output name=targetIP::$TARGET_IP"
+        id: apply
+        run: terraform apply -auto-approve
 
       - name: 'Get Terraform Output'
+        id: get_ip
         working-directory: ./iac
         run: |
-          echo "Connecting to ${{ needs.terraform-build.outputs.instance_public_ip }}"
-          
+          instance_ip=$(terraform output -raw instance_public_ip)
+          echo "instance_public_ip=$instance_ip" >> $GITHUB_ENV
+          echo "::set-output name=instance_public_ip::$instance_ip"
 
   deploy:
     runs-on: ubuntu-latest
