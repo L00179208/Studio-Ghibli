@@ -110,8 +110,8 @@ jobs:
         id: get_ip
         working-directory: ./iac
         run: |
+          echo "Connecting to $(terraform output -raw instance_public_ip)"
           echo "instance_public_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_ENV
-          echo "Connecting to $instance_public_ip"
 
   deploy:
     runs-on: ubuntu-latest
