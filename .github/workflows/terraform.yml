@@ -135,7 +135,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           echo "Pulling Docker images on ${{ needs.terraform-build.outputs.target_ec2_ip }}"
-          ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }} << EOF
+          ssh -o StrictHostKeyChecking=no -i sgproject ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }} << EOF
             docker pull $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
             # Uncomment these lines as needed
             # docker pull $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
@@ -152,7 +152,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           echo "Running Docker containers on ${{ needs.terraform-build.outputs.target_ec2_ip }}"
-          ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }} << EOF
+          ssh -o StrictHostKeyChecking=no -i sgproject ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }} << EOF
             # Uncomment these lines as needed
             # docker run -d -p 80:80 $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
             docker run -d -p 8080:8080 $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
