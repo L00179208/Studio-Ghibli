@@ -57,7 +57,7 @@ jobs:
           build_and_push "backend/customers" "customers"
           build_and_push "backend/users" "users"
 
-  terraform:
+  terraform-build:
     name: 'Terraform Plan and Apply'
     runs-on: ubuntu-latest
 
