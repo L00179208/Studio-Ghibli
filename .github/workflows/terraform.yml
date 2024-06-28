@@ -120,13 +120,13 @@ jobs:
 
       - name: Download SSH key
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > deploy_key
-          chmod 400 deploy_key
+          echo "${{ secrets.AWS_SSH_PRIVATE_KEY }}" > deploy_key.pem
+          chmod 400 deploy_key.pm
 
       - name: Connect to EC2 instance via SSH
         run: |
           echo "Connecting to ${{ needs.terraform-build.outputs.target_ec2_ip }}"
-          ssh -o StrictHostKeyChecking=no -i app_deploy ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }}
+          ssh -o StrictHostKeyChecking=no -i deploy_key.pm ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }}
 
       - name: Pull Docker images
         env:
