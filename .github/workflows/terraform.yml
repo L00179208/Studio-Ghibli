@@ -11,6 +11,7 @@ on:
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  PRIVATE_SSH_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
 
 jobs:
   build-and-push-images:
@@ -74,6 +75,11 @@ jobs:
         with:
           terraform_version: 1.0.9
 
+      - name: 'Configure AWS credentials'
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-secrets-manager-arn: ${{ secrets.AWS_SECRETS_MANAGER_ARN }}          
+
       - name: 'Install Terrascan'
         run: |
           curl -L https://github.com/tenable/terrascan/releases/download/v1.19.1/terrascan_1.19.1_Linux_x86_64.tar.gz -o terrascan.tar.gz
@@ -120,13 +126,13 @@ jobs:
 
       - name: Download SSH key
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > deploy_key
-          chmod 400 deploy_key
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > sgproject
+          chmod 400 sgproject
 
       - name: Connect to EC2 instance via SSH
         run: |
           echo "Connecting to ${{ needs.terraform-build.outputs.target_ec2_ip }}"
-          ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }}
+          ssh -o StrictHostKeyChecking=no -i sgproject ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }}
 
       - name: Pull Docker images
         env:
@@ -134,7 +140,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           echo "Pulling Docker images on ${{ needs.terraform-build.outputs.target_ec2_ip }}"
-          ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }} << EOF
+          ssh -o StrictHostKeyChecking=no -i sgproject ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }} << EOF
             docker pull $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
             # Uncomment these lines as needed
             # docker pull $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
@@ -151,7 +157,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           echo "Running Docker containers on ${{ needs.terraform-build.outputs.target_ec2_ip }}"
-          ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }} << EOF
+          ssh -o StrictHostKeyChecking=no -i sgproject ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }} << EOF
             # Uncomment these lines as needed
             # docker run -d -p 80:80 $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
             docker run -d -p 8080:8080 $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
