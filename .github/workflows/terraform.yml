@@ -153,15 +153,16 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
             # Stage 2: Install MySQL and deploy custom Docker containers
-            sudo docker run -d -p 3306:3306 --name mysql \
-              -e MYSQL_ROOT_PASSWORD=1234!@#$qwer \
-              -e MYSQL_DATABASE=sgapp \
-              -e MYSQL_USER=sguser \
-              -e MYSQL_PASSWORD=sguser!@34 \
-              mysql:latest
+            # sudo docker run -d -p 3306:3306 --name mysql \
+            #   -e MYSQL_ROOT_PASSWORD=1234!@#$qwer \
+            #   -e MYSQL_DATABASE=sgapp \
+            #   -e MYSQL_USER=sguser \
+            #   -e MYSQL_PASSWORD=sguser!@34 \
+            #   mysql:latest
 
             # Pull and run your Docker containers (adjust ports and image names accordingly)
-            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            
             #Pull the application images
             docker pull $DOCKER_USERNAME/sgproject:admin_frontend-${IMAGE_TAG}
             docker pull $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-${IMAGE_TAG}
