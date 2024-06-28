@@ -161,8 +161,8 @@ jobs:
             #   mysql:latest
 
             # Pull and run your Docker containers (adjust ports and image names accordingly)
-            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-            
+            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
             #Pull the application images
             docker pull $DOCKER_USERNAME/sgproject:admin_frontend-${IMAGE_TAG}
             docker pull $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-${IMAGE_TAG}
