@@ -161,6 +161,7 @@ jobs:
             #   -e MYSQL_PASSWORD=sguser!@34 \
             #   mysql:latest
 
+            echo "Deploying Docker containers... [[ $DOCKER_TOKEN ]]"
             # Pull and run your Docker containers (adjust ports and image names accordingly)
             echo $DOCKER_TOKEN | docker login -u $DOCKER_USERNAME --password-stdin
 
