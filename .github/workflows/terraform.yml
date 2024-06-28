@@ -129,7 +129,7 @@ jobs:
         env:
           EC2_IP: ${{ needs.terraform-build.outputs.target_ec2_ip }}
         run: |
-          ssh -o StrictHostKeyChecking=no ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
             # Install Docker
             sudo apt-get update
             sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
@@ -151,7 +151,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          ssh -o StrictHostKeyChecking=no ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
             # Stage 2: Install MySQL and deploy custom Docker containers
             sudo docker run -d -p 3306:3306 --name mysql \
               -e MYSQL_ROOT_PASSWORD=1234!@#$qwer \
