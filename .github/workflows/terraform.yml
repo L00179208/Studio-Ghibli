@@ -99,10 +99,14 @@ jobs:
 
       - name: 'Terraform Plan'
         working-directory: ./iac
+        env:
+          TF_VAR_private_key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}        
         run: terraform plan
 
       - name: 'Terraform Apply'
         working-directory: ./iac
+        env:
+          TF_VAR_private_key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}        
         id: get_ip
         run: |
           terraform apply -auto-approve

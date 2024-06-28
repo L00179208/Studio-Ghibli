@@ -27,6 +27,13 @@ resource "aws_instance" "instance" {
       "sudo docker run -d --name=prometheus -p 9090:9090 prom/prometheus"
     ]
   }
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file(var.private_key_path)
+    host        = self.public_ip
+  }
 }
 
 # Check if the key pair exists
