@@ -99,14 +99,10 @@ jobs:
 
       - name: 'Terraform Plan'
         working-directory: ./iac
-        env:
-          TF_VAR_private_key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}        
         run: terraform plan
 
       - name: 'Terraform Apply'
         working-directory: ./iac
-        env:
-          TF_VAR_private_key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}        
         id: get_ip
         run: |
           terraform apply -auto-approve
@@ -130,31 +126,49 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
 
-      - name: Pull and run Docker containers on EC2
+      - name: Install Docker, Prometheus, Grafana, MySQL
         env:
           EC2_IP: ${{ needs.terraform-build.outputs.target_ec2_ip }}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          IMAGE_TAG: ${{ github.sha }}
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@$EC2_IP << 'EOF'
+            # Install Docker
+            sudo apt-get update
+            sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+            sudo apt-get update
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+
+            # Install Prometheus
+            sudo docker run -d -p 9090:9090 --name prometheus prom/prometheus
+
+            # Install Grafana
+            sudo docker run -d -p 3000:3000 --name grafana grafana/grafana
+
+            # Install MySQL (adjust version and credentials as needed)
+            sudo docker run -d -p 3306:3306 --name mysql \
+              -e MYSQL_ROOT_PASSWORD=your_root_password \
+              -e MYSQL_DATABASE=your_database_name \
+              -e MYSQL_USER=your_mysql_user \
+              -e MYSQL_PASSWORD=your_mysql_password \
+              mysql:latest
+
+            # Pull and run your Docker containers (adjust ports and image names accordingly)
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-            docker pull $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
-            # Uncomment these lines as needed
-            # docker pull $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
-            # docker pull $DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG
-            # docker pull $DOCKER_USERNAME/sgproject:courses-$IMAGE_TAG
-            # docker pull $DOCKER_USERNAME/sgproject:enrollment-$IMAGE_TAG
-            # docker pull $DOCKER_USERNAME/sgproject:customers-$IMAGE_TAG
-            # docker pull $DOCKER_USERNAME/sgproject:users-$IMAGE_TAG
-            # Add more docker pull and run commands as needed for other services
-            # Change to script latser
-            # Uncomment these lines as needed
-            # docker run -d -p 80:80 $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
-            docker run -d -p 8080:8080 $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
-            # docker run -d -p 8880:8880 $DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG
-            # docker run -d -p 8881:8881 $DOCKER_USERNAME/sgproject:courses-$IMAGE_TAG
-            # docker run -d -p 8882:8882 $DOCKER_USERNAME/sgproject:enrollment-$IMAGE_TAG
-            # docker run -d -p 8883:8883 $DOCKER_USERNAME/sgproject:customers-$IMAGE_TAG
-            # docker run -d -p 8884:8884 $DOCKER_USERNAME/sgproject:users-$IMAGE_TAG            
+            docker pull $DOCKER_USERNAME/sgproject:admin_frontend-${IMAGE_TAG}
+            docker run -d -p 8080:8080 $DOCKER_USERNAME/sgproject:admin_frontend-${IMAGE_TAG}
+            # Uncomment and adjust as needed for other services
+            # docker pull $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-${IMAGE_TAG}
+            # docker run -d -p 80:80 $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-${IMAGE_TAG}
+            # docker pull $DOCKER_USERNAME/sgproject:gateway-${IMAGE_TAG}
+            # docker run -d -p 8880:8880 $DOCKER_USERNAME/sgproject:gateway-${IMAGE_TAG}
+            # docker pull $DOCKER_USERNAME/sgproject:courses-${IMAGE_TAG}
+            # docker run -d -p 8881:8881 $DOCKER_USERNAME/sgproject:courses-${IMAGE_TAG}
+            # docker pull $DOCKER_USERNAME/sgproject:enrollment-${IMAGE_TAG}
+            # docker run -d -p 8882:8882 $DOCKER_USERNAME/sgproject:enrollment-${IMAGE_TAG}
+            # docker pull $DOCKER_USERNAME/sgproject:customers-${IMAGE_TAG}
+            # docker run -d -p 8883:8883 $DOCKER_USERNAME/sgproject:customers-${IMAGE_TAG}
+            # docker pull $DOCKER_USERNAME/sgproject:users-${IMAGE_TAG}
+            # docker run -d -p 8884:8884 $DOCKER_USERNAME/sgproject:users-${IMAGE_TAG}
           EOF
+
