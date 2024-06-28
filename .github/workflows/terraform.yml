@@ -124,7 +124,7 @@ jobs:
       - name: Add SSH Key
         uses: webfactory/ssh-agent@v0.5.3
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
 
       - name: Pull and run Docker containers on EC2
         env:
