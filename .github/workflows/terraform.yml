@@ -139,18 +139,26 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
-            # Install Prometheus
+            # Stage 1: Install Prometheus and Grafana
             sudo docker run -d -p 9090:9090 --name prometheus prom/prometheus
-
-            # Install Grafana
             sudo docker run -d -p 3000:3000 --name grafana grafana/grafana
 
-            # Install MySQL (adjust version and credentials as needed)
+          EOF
+
+      - name: Deploy Custom Docker Containers
+        env:
+          EC2_IP: ${{ needs.terraform-build.outputs.target_ec2_ip }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@$EC2_IP << 'EOF'
+            # Stage 2: Install MySQL and deploy custom Docker containers
             sudo docker run -d -p 3306:3306 --name mysql \
-              -e MYSQL_ROOT_PASSWORD=your_root_password \
-              -e MYSQL_DATABASE=your_database_name \
-              -e MYSQL_USER=your_mysql_user \
-              -e MYSQL_PASSWORD=your_mysql_password \
+              -e MYSQL_ROOT_PASSWORD=1234!@#$qwer \
+              -e MYSQL_DATABASE=sgapp \
+              -e MYSQL_USER=sguser \
+              -e MYSQL_PASSWORD=sguser!@34 \
               mysql:latest
 
             # Pull and run your Docker containers (adjust ports and image names accordingly)
