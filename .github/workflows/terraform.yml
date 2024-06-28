@@ -11,7 +11,6 @@ on:
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  PRIVATE_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
 jobs:
   build-and-push-images:
@@ -122,12 +121,12 @@ jobs:
       - name: Download SSH key
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > deploy_key
-          chmod 600 deploy_key
+          chmod 400 deploy_key
 
       - name: Connect to EC2 instance via SSH
         run: |
           echo "Connecting to ${{ needs.terraform-build.outputs.target_ec2_ip }}"
-          ssh -o StrictHostKeyChecking=no -i sgproject ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }}
+          ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }}
 
       - name: Pull Docker images
         env:
@@ -135,7 +134,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           echo "Pulling Docker images on ${{ needs.terraform-build.outputs.target_ec2_ip }}"
-          ssh -o StrictHostKeyChecking=no -i sgproject ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }} << EOF
+          ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }} << EOF
             docker pull $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
             # Uncomment these lines as needed
             # docker pull $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
@@ -152,7 +151,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           echo "Running Docker containers on ${{ needs.terraform-build.outputs.target_ec2_ip }}"
-          ssh -o StrictHostKeyChecking=no -i sgproject ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }} << EOF
+          ssh -o StrictHostKeyChecking=no -i deploy_key ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }} << EOF
             # Uncomment these lines as needed
             # docker run -d -p 80:80 $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
             docker run -d -p 8080:8080 $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
