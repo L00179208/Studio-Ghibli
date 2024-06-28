@@ -53,7 +53,7 @@ jobs:
           }
 
           build_and_push "admin_frontend" "admin_frontend"
-          # Uncomment these lines as needed
+          # Uncomment these lines as needed for other services
           # build_and_push "frontend/studio-ghibli" "studio_ghibli_frontend"
           # build_and_push "backend/gateway" "gateway"
           # build_and_push "backend/courses" "courses"
