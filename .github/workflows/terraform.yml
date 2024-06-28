@@ -168,7 +168,8 @@ jobs:
               export DOCKER_TOKEN="$DOCKER_TOKEN"
               
               # Login to Docker registry
-              echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
+              #echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
+              docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin <<< "${{ secrets.DOCKER_TOKEN }}"
               
               # Pull and run your Docker containers (adjust ports and image names accordingly)
               docker pull "$DOCKER_USERNAME/sgproject:admin_frontend-${IMAGE_TAG}"
