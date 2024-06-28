@@ -171,13 +171,19 @@ jobs:
               #echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
               docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin <<< "${{ secrets.DOCKER_TOCKEN_NEW }}"
               
+              # Update the system (recommended)
+              sudo apt update && sudo apt upgrade -y
+
+              # (Optional) Restart the Docker service (may not be necessary)
+              sudo systemctl restart docker.sock
+
               # Pull and run your Docker containers (adjust ports and image names accordingly)
-              docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:admin_frontend-${{ github.sha }}"
-              docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:studio_ghibli_frontend-${{ github.sha }}"
-              docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:gateway-${{ github.sha }}"
+              sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:admin_frontend-${{ github.sha }}"
+              sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:studio_ghibli_frontend-${{ github.sha }}"
+              sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:gateway-${{ github.sha }}"
               
-              docker run -d -p 8080:8080 "${{ secrets.DOCKER_USERNAME }}/sgproject:admin_frontend-${{ github.sha }}"
-              docker run -d -p 80:80 "${{ secrets.DOCKER_USERNAME }}/sgproject:studio_ghibli_frontend-${{ github.sha }}"
-              docker run -d -p 8880:8880 "${{ secrets.DOCKER_USERNAME }}/sgproject:gateway-${{ github.sha }}"
+              sudo docker run -d -p 8080:8080 "${{ secrets.DOCKER_USERNAME }}/sgproject:admin_frontend-${{ github.sha }}"
+              sudo docker run -d -p 80:80 "${{ secrets.DOCKER_USERNAME }}/sgproject:studio_ghibli_frontend-${{ github.sha }}"
+              sudo docker run -d -p 8880:8880 "${{ secrets.DOCKER_USERNAME }}/sgproject:gateway-${{ github.sha }}"
           EOF
 
