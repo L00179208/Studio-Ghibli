@@ -78,6 +78,7 @@ jobs:
       - name: 'Configure AWS credentials'
         uses: aws-actions/configure-aws-credentials@v1
         with:
+          aws-region: ${{ secrets.AWS_REGION }}
           aws-secrets-manager-arn: ${{ secrets.AWS_SECRETS_MANAGER_ARN }}          
 
       - name: 'Install Terrascan'
