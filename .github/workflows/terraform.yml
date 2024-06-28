@@ -53,12 +53,12 @@ jobs:
 
           build_and_push "admin_frontend" "admin_frontend"
           # Uncomment these lines as needed
-          # build_and_push "frontend/studio-ghibli" "studio_ghibli_frontend"
-          # build_and_push "backend/gateway" "gateway"
-          # build_and_push "backend/courses" "courses"
-          # build-and-push "backend/enrollment" "enrollment"
-          # build-and-push "backend/customers" "customers"
-          # build-and-push "backend/users" "users"
+          build_and_push "frontend/studio-ghibli" "studio_ghibli_frontend"
+          build_and_push "backend/gateway" "gateway"
+          build_and_push "backend/courses" "courses"
+          build-and-push "backend/enrollment" "enrollment"
+          build-and-push "backend/customers" "customers"
+          build-and-push "backend/users" "users"
 
   terraform-build:
     name: 'Terraform Plan and Apply'
