@@ -149,6 +149,7 @@ jobs:
           EC2_IP: ${{ needs.terraform-build.outputs.target_ec2_ip }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
@@ -161,7 +162,7 @@ jobs:
             #   mysql:latest
 
             # Pull and run your Docker containers (adjust ports and image names accordingly)
-            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+            echo $DOCKER_TOKEN | docker login -u $DOCKER_USERNAME --password-stdin
 
             #Pull the application images
             docker pull $DOCKER_USERNAME/sgproject:admin_frontend-${IMAGE_TAG}
