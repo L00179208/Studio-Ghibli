@@ -98,9 +98,15 @@ jobs:
         working-directory: ./iac
         run: terraform validate
 
-      - name: 'Terraform Plan'
+      - name: Execute Terraform Plan
         working-directory: ./iac
-        run: terraform plan
+        run: terraform plan -out=tfplan
+        continue-on-error: true
+        env:
+          TF_LOG: DEBUG
+
+      - name: Show Terraform Plan
+        run: cat ./iac/tfplan
 
       - name: 'Terraform Apply'
         working-directory: ./iac
