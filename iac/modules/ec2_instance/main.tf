@@ -13,6 +13,20 @@ resource "aws_instance" "instance" {
   lifecycle {
     create_before_destroy = true
   }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update",
+      "sudo apt-get install -y docker.io",
+      "sudo systemctl start docker",
+      "sudo systemctl enable docker",
+      "sudo docker pull prom/prometheus",
+      "sudo docker pull grafana/grafana",
+      "sudo docker run -d --name=mysql-db -e MYSQL_ROOT_PASSWORD=password mysql",
+      "sudo docker run -d --name=grafana -p 3000:3000 grafana/grafana",
+      "sudo docker run -d --name=prometheus -p 9090:9090 prom/prometheus"
+    ]
+  }
 }
 
 # Check if the key pair exists
