@@ -149,7 +149,7 @@ jobs:
           EC2_IP: ${{ needs.terraform-build.outputs.target_ec2_ip }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOCKEN_NEW }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
@@ -169,7 +169,7 @@ jobs:
               
               # Login to Docker registry
               #echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
-              docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin <<< "${{ secrets.DOCKER_TOKEN }}"
+              docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin <<< "${{ secrets.DOCKER_TOCKEN_NEW }}"
               
               # Pull and run your Docker containers (adjust ports and image names accordingly)
               docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:admin_frontend-${{ github.sha }}"
