@@ -52,13 +52,12 @@ jobs:
           }
 
           build_and_push "admin_frontend" "admin_frontend"
-          # Uncomment these lines as needed
           build_and_push "frontend/studio-ghibli" "studio_ghibli_frontend"
           build_and_push "backend/gateway" "gateway"
-          build_and_push "backend/courses" "courses"
-          build-and-push "backend/enrollment" "enrollment"
-          build-and-push "backend/customers" "customers"
-          build-and-push "backend/users" "users"
+          # build_and_push "backend/courses" "courses"
+          # build-and-push "backend/enrollment" "enrollment"
+          # build-and-push "backend/customers" "customers"
+          # build-and-push "backend/users" "users"
 
   terraform-build:
     name: 'Terraform Plan and Apply'
@@ -167,18 +166,18 @@ jobs:
             docker pull $DOCKER_USERNAME/sgproject:admin_frontend-${IMAGE_TAG}
             docker pull $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-${IMAGE_TAG}
             docker pull $DOCKER_USERNAME/sgproject:gateway-${IMAGE_TAG}
-            docker pull $DOCKER_USERNAME/sgproject:courses-${IMAGE_TAG}
-            docker pull $DOCKER_USERNAME/sgproject:enrollment-${IMAGE_TAG}
-            docker pull $DOCKER_USERNAME/sgproject:customers-${IMAGE_TAG}
-            docker pull $DOCKER_USERNAME/sgproject:users-${IMAGE_TAG}
+            # docker pull $DOCKER_USERNAME/sgproject:courses-${IMAGE_TAG}
+            # docker pull $DOCKER_USERNAME/sgproject:enrollment-${IMAGE_TAG}
+            # docker pull $DOCKER_USERNAME/sgproject:customers-${IMAGE_TAG}
+            # docker pull $DOCKER_USERNAME/sgproject:users-${IMAGE_TAG}
             
             # Run the application containters
             docker run -d -p 8080:8080 $DOCKER_USERNAME/sgproject:admin_frontend-${IMAGE_TAG}
             docker run -d -p 80:80 $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-${IMAGE_TAG}
             docker run -d -p 8880:8880 $DOCKER_USERNAME/sgproject:gateway-${IMAGE_TAG}
-            docker run -d -p 8881:8881 $DOCKER_USERNAME/sgproject:courses-${IMAGE_TAG}
-            docker run -d -p 8882:8882 $DOCKER_USERNAME/sgproject:enrollment-${IMAGE_TAG}
-            docker run -d -p 8883:8883 $DOCKER_USERNAME/sgproject:customers-${IMAGE_TAG}
-            docker run -d -p 8884:8884 $DOCKER_USERNAME/sgproject:users-${IMAGE_TAG}
+            # docker run -d -p 8881:8881 $DOCKER_USERNAME/sgproject:courses-${IMAGE_TAG}
+            # docker run -d -p 8882:8882 $DOCKER_USERNAME/sgproject:enrollment-${IMAGE_TAG}
+            # docker run -d -p 8883:8883 $DOCKER_USERNAME/sgproject:customers-${IMAGE_TAG}
+            # docker run -d -p 8884:8884 $DOCKER_USERNAME/sgproject:users-${IMAGE_TAG}
           EOF
 
