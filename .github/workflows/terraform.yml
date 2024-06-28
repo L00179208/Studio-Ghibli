@@ -153,34 +153,30 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
-            # Stage 2: Install MySQL and deploy custom Docker containers
-            # sudo docker run -d -p 3306:3306 --name mysql \
-            #   -e MYSQL_ROOT_PASSWORD=1234!@#$qwer \
-            #   -e MYSQL_DATABASE=sgapp \
-            #   -e MYSQL_USER=sguser \
-            #   -e MYSQL_PASSWORD=sguser!@34 \
-            #   mysql:latest
-
-            echo "Deploying Docker containers... [[ $DOCKER_TOKEN ]]"
-            # Pull and run your Docker containers (adjust ports and image names accordingly)
-            echo $DOCKER_TOKEN | docker login -u $DOCKER_USERNAME --password-stdin
-
-            #Pull the application images
-            docker pull $DOCKER_USERNAME/sgproject:admin_frontend-${IMAGE_TAG}
-            docker pull $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-${IMAGE_TAG}
-            docker pull $DOCKER_USERNAME/sgproject:gateway-${IMAGE_TAG}
-            # docker pull $DOCKER_USERNAME/sgproject:courses-${IMAGE_TAG}
-            # docker pull $DOCKER_USERNAME/sgproject:enrollment-${IMAGE_TAG}
-            # docker pull $DOCKER_USERNAME/sgproject:customers-${IMAGE_TAG}
-            # docker pull $DOCKER_USERNAME/sgproject:users-${IMAGE_TAG}
+              # Stage 2: Install MySQL and deploy custom Docker containers
+              # sudo docker run -d -p 3306:3306 --name mysql \
+              #   -e MYSQL_ROOT_PASSWORD=1234!@#$qwer \
+              #   -e MYSQL_DATABASE=sgapp \
+              #   -e MYSQL_USER=sguser \
+              #   -e MYSQL_PASSWORD=sguser!@34 \
+              #   mysql:latest
             
-            # Run the application containters
-            docker run -d -p 8080:8080 $DOCKER_USERNAME/sgproject:admin_frontend-${IMAGE_TAG}
-            docker run -d -p 80:80 $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-${IMAGE_TAG}
-            docker run -d -p 8880:8880 $DOCKER_USERNAME/sgproject:gateway-${IMAGE_TAG}
-            # docker run -d -p 8881:8881 $DOCKER_USERNAME/sgproject:courses-${IMAGE_TAG}
-            # docker run -d -p 8882:8882 $DOCKER_USERNAME/sgproject:enrollment-${IMAGE_TAG}
-            # docker run -d -p 8883:8883 $DOCKER_USERNAME/sgproject:customers-${IMAGE_TAG}
-            # docker run -d -p 8884:8884 $DOCKER_USERNAME/sgproject:users-${IMAGE_TAG}
+              echo "Deploying Docker containers..."
+              
+              # Ensure Docker credentials are set
+              export DOCKER_USERNAME="$DOCKER_USERNAME"
+              export DOCKER_TOKEN="$DOCKER_TOKEN"
+              
+              # Login to Docker registry
+              echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
+              
+              # Pull and run your Docker containers (adjust ports and image names accordingly)
+              docker pull "$DOCKER_USERNAME/sgproject:admin_frontend-${IMAGE_TAG}"
+              docker pull "$DOCKER_USERNAME/sgproject:studio_ghibli_frontend-${IMAGE_TAG}"
+              docker pull "$DOCKER_USERNAME/sgproject:gateway-${IMAGE_TAG}"
+              
+              docker run -d -p 8080:8080 "$DOCKER_USERNAME/sgproject:admin_frontend-${IMAGE_TAG}"
+              docker run -d -p 80:80 "$DOCKER_USERNAME/sgproject:studio_ghibli_frontend-${IMAGE_TAG}"
+              docker run -d -p 8880:8880 "$DOCKER_USERNAME/sgproject:gateway-${IMAGE_TAG}"
           EOF
 
