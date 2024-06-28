@@ -56,9 +56,9 @@ jobs:
           # build_and_push "frontend/studio-ghibli" "studio_ghibli_frontend"
           # build_and_push "backend/gateway" "gateway"
           # build_and_push "backend/courses" "courses"
-          # build_and_push "backend/enrollment" "enrollment"
-          # build_and_push "backend/customers" "customers"
-          # build_and_push "backend/users" "users"
+          # build-and-push "backend/enrollment" "enrollment"
+          # build-and-push "backend/customers" "customers"
+          # build-and-push "backend/users" "users"
 
   terraform-build:
     name: 'Terraform Plan and Apply'
@@ -110,31 +110,31 @@ jobs:
           match=$(echo "$instance_ip" | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')  # Extract digits and dots
           echo "::set-output name=target_ip::$match"
 
-  deploy:
+  deploy-containers:
+    name: 'Deploy Docker Containers to EC2'
+    needs: terraform-build
     runs-on: ubuntu-latest
-    needs: [terraform-build, build-and-push-images]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Download SSH key
-        run: |
-          echo "${{ secrets.AWS_SSH_PRIVATE_KEY }}" > deploy_key.pem
-          chmod 400 deploy_key.pm
+      - name: Install SSH Client
+        run: sudo apt-get install -y openssh-client
 
-      - name: Connect to EC2 instance via SSH
-        run: |
-          echo "Connecting to ${{ needs.terraform-build.outputs.target_ec2_ip }}"
-          ssh -o StrictHostKeyChecking=no -i deploy_key.pm ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }}
+      - name: Add SSH Key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Pull Docker images
+      - name: Pull and run Docker containers on EC2
         env:
+          EC2_IP: ${{ needs.terraform-build.outputs.target_ec2_ip }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          echo "Pulling Docker images on ${{ needs.terraform-build.outputs.target_ec2_ip }}"
-          ssh -o StrictHostKeyChecking=no -i app_deploy ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }} << EOF
+          ssh -o StrictHostKeyChecking=no ubuntu@$EC2_IP << 'EOF'
+            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
             docker pull $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
             # Uncomment these lines as needed
             # docker pull $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
@@ -143,15 +143,8 @@ jobs:
             # docker pull $DOCKER_USERNAME/sgproject:enrollment-$IMAGE_TAG
             # docker pull $DOCKER_USERNAME/sgproject:customers-$IMAGE_TAG
             # docker pull $DOCKER_USERNAME/sgproject:users-$IMAGE_TAG
-          EOF
-
-      - name: Run Docker containers
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          echo "Running Docker containers on ${{ needs.terraform-build.outputs.target_ec2_ip }}"
-          ssh -o StrictHostKeyChecking=no -i app_deploy ubuntu@${{ needs.terraform-build.outputs.target_ec2_ip }} << EOF
+            # Add more docker pull and run commands as needed for other services
+            # Change to script latser
             # Uncomment these lines as needed
             # docker run -d -p 80:80 $DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG
             docker run -d -p 8080:8080 $DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG
@@ -159,5 +152,5 @@ jobs:
             # docker run -d -p 8881:8881 $DOCKER_USERNAME/sgproject:courses-$IMAGE_TAG
             # docker run -d -p 8882:8882 $DOCKER_USERNAME/sgproject:enrollment-$IMAGE_TAG
             # docker run -d -p 8883:8883 $DOCKER_USERNAME/sgproject:customers-$IMAGE_TAG
-            # docker run -d -p 8884:8884 $DOCKER_USERNAME/sgproject:users-$IMAGE_TAG
+            # docker run -d -p 8884:8884 $DOCKER_USERNAME/sgproject:users-$IMAGE_TAG            
           EOF
