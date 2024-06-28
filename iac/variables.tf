@@ -1,3 +1,9 @@
+
+variable "ssh_public_key" {
+  description = "Public SSH key"
+  type        = string
+}
+
 variable "instance_name" {
   description = "Name of the EC2 instance"
   type        = string

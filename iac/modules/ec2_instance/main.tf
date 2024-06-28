@@ -4,11 +4,6 @@ resource "aws_instance" "instance" {
   key_name      = var.key_name
   subnet_id     = var.subnet_id
 
-  provisioner "file" {
-    source      = "../../id_rsa.pub"
-    destination = "/home/ubuntu/.ssh/authorized_keys"
-  }
-
   tags = {
     Name = var.instance_name
   }
@@ -18,4 +13,9 @@ resource "aws_instance" "instance" {
   lifecycle {
     create_before_destroy = true
   }
+}
+
+resource "aws_key_pair" "deployer" {
+  key_name   = var.key_name
+  public_key = var.ssh_public_key
 }
