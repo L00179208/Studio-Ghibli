@@ -73,11 +73,9 @@ jobs:
           # build-and-push "backend/customers" "customers"
           # build-and-push "backend/users" "users"
 
-  terraform-build:
-    name: 'Terraform Plan and Apply'
+  terraform-scanning:
+    name: 'Terraform Scanning'
     runs-on: ubuntu-latest
-    outputs:
-      target_ec2_ip: ${{ steps.get_ip.outputs.target_ip }}
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v2
@@ -98,9 +96,24 @@ jobs:
       - name: 'List Directory Contents'
         run: ls -la ./iac
 
-      - name: 'Run Terrascan'
+      - name: 'Perform Terrascan'
         run: terrascan scan -i terraform -d ./iac
-        continue-on-error: true
+        continue-on-error: true 
+
+  terraform-build:
+    name: 'Terraform Plan and Apply'
+    needs: [terraform-scanning]
+    runs-on: ubuntu-latest
+    outputs:
+      target_ec2_ip: ${{ steps.get_ip.outputs.target_ip }}
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v2
+
+      - name: 'Set Up Terraform'
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.9
 
       - name: 'Terraform Init'
         working-directory: ./iac
