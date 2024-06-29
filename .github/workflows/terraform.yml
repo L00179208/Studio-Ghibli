@@ -73,6 +73,39 @@ jobs:
           # build-and-push "backend/customers" "customers"
           # build-and-push "backend/users" "users"
 
+  scan-docker-images:
+    runs-on: ubuntu-latest
+    needs: [build-and-push-images]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Trivy
+        run: |
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update && sudo apt-get install trivy
+
+      - name: Scan Docker Images with Trivy
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -e
+
+          scan_image() {
+            local image_name=$1
+
+            echo "Scanning image: $image_name"
+            trivy image --exit-code 1 --severity HIGH,CRITICAL $image_name
+          }
+
+          # Example: Scan multiple Docker images
+          scan_image "${DOCKER_USERNAME}/sgproject:admin_frontend-${IMAGE_TAG}"
+          scan_image "${DOCKER_USERNAME}/sgproject:studio_ghibli_frontend-${IMAGE_TAG}"
+          scan_image "${DOCKER_USERNAME}/sgproject:gateway-${IMAGE_TAG}"          
+
   iac-scanning:
     name: 'Terraform Scanning'
     runs-on: ubuntu-latest
