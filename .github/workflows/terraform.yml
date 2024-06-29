@@ -73,7 +73,7 @@ jobs:
           # build-and-push "backend/customers" "customers"
           # build-and-push "backend/users" "users"
 
-  terraform-scanning:
+  iac-scanning:
     name: 'Terraform Scanning'
     runs-on: ubuntu-latest
     steps:
@@ -100,9 +100,9 @@ jobs:
         run: terrascan scan -i terraform -d ./iac
         continue-on-error: true 
 
-  terraform-build:
+  iac-build:
     name: 'Terraform Plan and Apply'
-    needs: [terraform-scanning]
+    needs: [iac-scanning]
     runs-on: ubuntu-latest
     outputs:
       target_ec2_ip: ${{ steps.get_ip.outputs.target_ip }}
@@ -138,7 +138,7 @@ jobs:
 
   deploy-containers:
     name: 'Deploy Docker Containers to EC2'
-    needs: [build-and-push-images,terraform-build]
+    needs: [build-and-push-images,iac-build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
