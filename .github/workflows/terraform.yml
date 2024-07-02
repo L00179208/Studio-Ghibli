@@ -105,7 +105,11 @@ jobs:
           # Example: Scan multiple Docker images
           scan_image "${DOCKER_USERNAME}/sgproject:admin_frontend-${IMAGE_TAG}"
           scan_image "${DOCKER_USERNAME}/sgproject:studio_ghibli_frontend-${IMAGE_TAG}"
-          scan_image "${DOCKER_USERNAME}/sgproject:gateway-${IMAGE_TAG}"          
+          scan_image "${DOCKER_USERNAME}/sgproject:gateway-${IMAGE_TAG}"    
+          # scan_image "${DOCKER_USERNAME}/sgproject:courses-${{ github.sha }}"
+          # scan_image "${DOCKER_USERNAME}/sgproject:enrollment-${{ github.sha }}"
+          # scan_image "${DOCKER_USERNAME}/sgproject:customers-${{ github.sha }}"
+          # scan_image "${DOCKER_USERNAME}/sgproject:users-${{ github.sha }}"                
 
   iac-scanning:
     name: 'Terraform Scanning'
@@ -279,8 +283,56 @@ jobs:
               sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:admin_frontend-${{ github.sha }}"
               sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:studio_ghibli_frontend-${{ github.sha }}"
               sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:gateway-${{ github.sha }}"
+              # sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:courses-${{ github.sha }}"
+              # sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:enrollment-${{ github.sha }}"
+              # sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:customers-${{ github.sha }}"
+              # sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:users-${{ github.sha }}"
               
               sudo docker run -d -p 8080:8080 "${{ secrets.DOCKER_USERNAME }}/sgproject:admin_frontend-${{ github.sha }}"
               sudo docker run -d -p 80:80 "${{ secrets.DOCKER_USERNAME }}/sgproject:studio_ghibli_frontend-${{ github.sha }}"
               sudo docker run -d -p 8880:8880 "${{ secrets.DOCKER_USERNAME }}/sgproject:gateway-${{ github.sha }}"
+              # sudo docker run -d -p 8884:8884 "${{ secrets.DOCKER_USERNAME }}/sgproject:courses-${{ github.sha }}"
+              # sudo docker run -d -p 8883:8883 "${{ secrets.DOCKER_USERNAME }}/sgproject:enrollment-${{ github.sha }}"
+              # sudo docker run -d -p 8882:8882 "${{ secrets.DOCKER_USERNAME }}/sgproject:customers-${{ github.sha }}"
+              # sudo docker run -d -p 8881:8881 "${{ secrets.DOCKER_USERNAME }}/sgproject:users-${{ github.sha }}"
           EOF
+  scan-microservices:
+    runs-on: ubuntu-latest
+    needs: [build-and-push-images, deploy-containers ]  # Adjust dependency as needed
+    steps:
+      - name: Install Zap
+        uses: owasp/zap-docker-action@master
+
+      - name: Check Microservices with Zap
+        env:
+          EC2_IP: ${{ needs.iac-build.outputs.target_ec2_ip }}      
+        run: |
+          set -e
+
+          # Load microservice URLs (adjust based on your approach)
+            urls=(
+              "$EC2_IP",
+              "$EC2_IP:8080",
+              "$EC2_IP:8880/metrics"
+              #"$EC2_IP:8881/metrics"
+              #"$EC2_IP:8882/metrics"
+              #"$EC2_IP:8883/metrics"
+              #"$EC2_IP:8884/metrics"
+            )
+
+          for url in "${urls[@]}"; do
+            echo "Scanning microservice: $url"
+            docker run --rm owasp/zap2docker-stable zap-cli -h "$url" > "zap_scan_${url}.log"
+            # Optional Zap arguments for each scan
+          done
+      - name: Upload Zap Scan Artifacts (Loop)
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-scan-logs  # Artifact name
+          path: |  # Conditional upload within loop
+            for url in "${urls[@]}"; do
+              if [[ -f "zap_scan_${url}.log" ]]; then
+                echo "Uploading Zap scan log for $url"
+                "zap_scan_${url}.log"
+              fi
+            done      
