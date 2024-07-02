@@ -199,6 +199,7 @@ jobs:
         run: |
           scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./monitoring/prometheus.yml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/prometheus.yml
           scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./monitoring/datasources.yaml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/datasources.yaml
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./monitoring/blackbox.yml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/blackbox.yml
 
       - name: Install Docker, Prometheus, Grafana, MySQL
         env:
@@ -227,6 +228,9 @@ jobs:
             # Stage 1: Install Prometheus and Grafana
             sudo docker run -d -p 9090:9090 --name prometheus -v /home/ubuntu/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
             sudo docker run -d -p 3000:3000 --name grafana -v /etc/grafana/provisioning:/etc/grafana/provisioning grafana/grafana
+
+            # Run Blackbox Exporter
+            sudo docker run -d -p 9115:9115 --name blackbox_exporter -v /home/ubuntu/blackbox.yml:/etc/blackbox_exporter/config.yml prom/blackbox-exporter
 
             # Wait for Prometheus and Grafana to start
             sleep 30
