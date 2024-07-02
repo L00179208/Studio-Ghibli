@@ -1,4 +1,5 @@
-require("newrelic");
+const { Registry, collectDefaultMetrics } = require("prom-client");
+
 const express = require("express");
 const cors = require("cors");
 const proxy = require("express-http-proxy");
@@ -23,6 +24,10 @@ const app = express();
 const swaggerUI = require("swagger-ui-express");
 const yamljs = require("yamljs");
 const swaggerJsDocs = yamljs.load("./swagger/api.yml");
+
+const registry = new Registry(); // Create a Registry instance
+collectDefaultMetrics({ register: registry }); // Collect default metrics
+
 swaggerJsDocs.servers[0].url = GATEWAY_SERVICE_END_POINT;
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerJsDocs));
 
@@ -40,26 +45,15 @@ app.use(express.json());
  * end point to respective microservices
  */
 
-app.use(
-  "/api/users",
-  //proxy(`${USER_SERVICE_END_POINT}:${_ENV_USER_SERVICE_PORT}`)
-  proxy(`${USER_SERVICE_END_POINT}:32424`)
-);
-app.use(
-  "/api/customers",
-  //proxy(`${CUSTOMER_SERVICE_END_POINT}:${_ENV_CUSTOMER_SERVICE_PORT}`)
-  proxy(`${CUSTOMER_SERVICE_END_POINT}:30598`)
-);
-app.use(
-  "/api/enrollment",
-  //proxy(`${ENROLLMENT_SERVICE_END_POINT}:${_ENV_ENROLLMENT_SERVICE_PORT}`)
-  proxy(`${ENROLLMENT_SERVICE_END_POINT}:32606`)
-);
-app.use(
-  "/api/courses",
-  //proxy(`${COURSE_SERVICE_END_POINT}:${_ENV_COURSE_SERVICE_PORT}`)
-  proxy(`${COURSE_SERVICE_END_POINT}:31900`)
-);
+app.use("/api/users", proxy(`${USER_SERVICE_END_POINT}:32424`));
+app.use("/api/customers", proxy(`${CUSTOMER_SERVICE_END_POINT}:30598`));
+app.use("/api/enrollment", proxy(`${ENROLLMENT_SERVICE_END_POINT}:32606`));
+app.use("/api/courses", proxy(`${COURSE_SERVICE_END_POINT}:31900`));
+
+app.get("/metrics", async (req, res) => {
+  res.set("Content-Type", "text/plain");
+  res.send(await registry.metrics()); // Use the metrics function
+});
 
 app.use((req, res, next) => {
   res.setHeader("Referrer-Policy", "no-referrer-when-downgrade"); // Or another policy as needed

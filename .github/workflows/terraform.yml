@@ -193,6 +193,7 @@ jobs:
         run: |
           export EC2_IP=${{ needs.iac-build.outputs.target_ec2_ip }}
           envsubst < ./monitoring/prometheus.yml.template > ./monitoring/prometheus.yml
+          envsubst < ./monitoring/datasources.yml.template > ./monitoring/datasources.yaml
 
       - name: Copy Configuration Files
         run: |

@@ -4,5 +4,5 @@ datasources:
   - name: STG_Data
     type: prometheus
     access: proxy
-    url: http://localhost:9090
+    url: http://$EC2_IP:9090
     isDefault: true
