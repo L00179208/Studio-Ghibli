@@ -188,7 +188,7 @@ jobs:
 
       - name: Install Docker, Prometheus, Grafana, MySQL
         env:
-          EC2_IP: ${{ needs.terraform-build.outputs.target_ec2_ip }}
+          EC2_IP: ${{ needs.iac-build.outputs.target_ec2_ip }}
         run: |
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
             # Install Docker
@@ -207,7 +207,7 @@ jobs:
 
       - name: Deploy Application Docker Containers
         env:
-          EC2_IP: ${{ needs.terraform-build.outputs.target_ec2_ip }}
+          EC2_IP: ${{ needs.iac-build.outputs.target_ec2_ip }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOCKEN_NEW }}
