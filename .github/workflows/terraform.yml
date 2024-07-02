@@ -189,6 +189,10 @@ jobs:
       - name: Install jq
         run: sudo apt-get install -y jq
 
+      - name: Copy Prometheus Configuration
+        run: |
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./monitoring/prometheus.yml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/prometheus.yml
+
       - name: Install Docker, Prometheus, Grafana, MySQL
         env:
           EC2_IP: ${{ needs.iac-build.outputs.target_ec2_ip }}
@@ -203,7 +207,7 @@ jobs:
             sudo apt-get install -y docker-ce docker-ce-cli containerd.io jq
 
             # Stage 1: Install Prometheus and Grafana
-            sudo docker run -d -p 9090:9090 --name prometheus -v /home/ubuntu/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
+            sudo docker run -d -p 9090:9090 --name prometheus -v /home/ubuntu/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
             sudo docker run -d -p 3000:3000 --name grafana grafana/grafana
 
             # Wait for Grafana to start
