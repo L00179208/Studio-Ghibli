@@ -192,7 +192,7 @@ jobs:
       - name: Replace placeholders in Prometheus configuration
         run: |
           export EC2_IP=${{ needs.iac-build.outputs.target_ec2_ip }}
-          envsubst < ./config/prometheus.yml.template > ./config/prometheus.yml
+          envsubst < ./monitoring/prometheus.yml.template > ./monitoring/prometheus.yml
 
       - name: Copy Configuration Files
         run: |
