@@ -1,8 +1,0 @@
-{
-    "name": "stg_monitoring",
-    "type": "prometheus",
-    "url": "http://<EC2_IP>:3000",
-    "access": "proxy",
-    "isDefault": true
-  }
-  

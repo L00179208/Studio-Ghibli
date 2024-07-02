@@ -186,9 +186,18 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
 
-      - name: Copy Prometheus Configuration
+      - name: Install envsubst
+        run: sudo apt-get install -y gettext-base
+
+      - name: Replace placeholders in Prometheus configuration
+        run: |
+          export EC2_IP=${{ needs.iac-build.outputs.target_ec2_ip }}
+          envsubst < ./config/prometheus.yml.template > ./config/prometheus.yml
+
+      - name: Copy Configuration Files
         run: |
           scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./monitoring/prometheus.yml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/prometheus.yml
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./monitoring/datasources.yaml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/datasources.yaml
 
       - name: Install Docker, Prometheus, Grafana, MySQL
         env:
@@ -210,27 +219,22 @@ jobs:
             # Verify Docker is running
             sudo systemctl status docker
 
+            # Create provisioning directory for Grafana
+            sudo mkdir -p /etc/grafana/provisioning/datasources
+            sudo mv /home/ubuntu/datasources.yaml /etc/grafana/provisioning/datasources/datasources.yaml
+
             # Stage 1: Install Prometheus and Grafana
             sudo docker run -d -p 9090:9090 --name prometheus -v /home/ubuntu/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
-            sudo docker run -d -p 3000:3000 --name grafana grafana/grafana
+            sudo docker run -d -p 3000:3000 --name grafana -v /etc/grafana/provisioning:/etc/grafana/provisioning grafana/grafana
 
-            # Wait for Grafana to start
+            # Wait for Prometheus and Grafana to start
             sleep 30
 
-            # Create Grafana API key
-            GRAFANA_API_KEY=$(curl -s -X POST "http://admin:admin@localhost:3000/api/auth/keys" -H "Content-Type: application/json" -d '{"name":"API_KEY","role":"Admin"}' | jq -r '.key')
+            # Check Prometheus logs
+            sudo docker logs prometheus
 
-            # Configure Grafana to connect to Prometheus
-            curl -s -X POST "http://admin:$GRAFANA_API_KEY@localhost:3000/api/datasources" -H "Content-Type: application/json" -d '{
-              "name": "Prometheus",
-              "type": "prometheus",
-              "url": "http://localhost:9090",
-              "access": "proxy",
-              "isDefault": true
-            }'
-
-            # Check the status of Prometheus and Grafana containers
-            sudo docker ps -a
+            # Check Grafana logs
+            sudo docker logs grafana
           EOF
 
       - name: Deploy Application Docker Containers
