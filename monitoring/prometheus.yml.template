@@ -7,15 +7,15 @@ scrape_configs:
       - targets: ['localhost:9090']
   - job_name: 'stg_frontend'
     static_configs:
-      - targets: ['http://{{ needs.iac-build.outputs.target_ec2_ip }}:80', 'http://{{ needs.iac-build.outputs.target_ec2_ip }}:8080']
+      - targets: ['http://{{ EC2_IP }}:80', 'http://{{ EC2_IP }}:8080']
   - job_name: 'stg_microservices'
     static_configs:
       - targets:
-          - http://{{ needs.iac-build.outputs.target_ec2_ip }}:8880
-          - http://{{ needs.iac-build.outputs.target_ec2_ip }}:8881
-          - http://{{ needs.iac-build.outputs.target_ec2_ip }}:8882
-          - http://{{ needs.iac-build.outputs.target_ec2_ip }}:8884
-          - http://{{ needs.iac-build.outputs.target_ec2_ip }}:8885
+          - http://{{ EC2_IP }}:8880
+          - http://{{ EC2_IP }}:8881
+          - http://{{ EC2_IP }}:8882
+          - http://{{ EC2_IP }}:8884
+          - http://{{ EC2_IP }}:8885
   - job_name: 'mysql'
     static_configs:
-      - targets: ['http://{{ needs.iac-build.outputs.target_ec2_ip }}:3306']  # Adjust URL if MySQL exposes Prometheus metrics
+      - targets: ['http://{{ EC2_IP }}:3306']  # Adjust URL if MySQL exposes Prometheus metrics
