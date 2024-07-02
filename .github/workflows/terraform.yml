@@ -170,96 +170,96 @@ jobs:
           match=$(echo "$instance_ip" | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')  # Extract digits and dots
           echo "::set-output name=target_ip::$match"
 
-deploy-containers:
-  name: 'Deploy Docker Containers to EC2'
-  needs: [build-and-push-images,iac-build]
-  runs-on: ubuntu-latest
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+  deploy-containers:
+    name: 'Deploy Docker Containers to EC2'
+    needs: [build-and-push-images,iac-build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Install SSH Client
-      run: sudo apt-get install -y openssh-client
+      - name: Install SSH Client
+        run: sudo apt-get install -y openssh-client
 
-    - name: Add SSH Key
-      uses: webfactory/ssh-agent@v0.5.3
-      with:
-        ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+      - name: Add SSH Key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
 
-    - name: Copy Prometheus Configuration
-      run: |
-        scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./config/prometheus.yml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/prometheus.yml
+      - name: Copy Prometheus Configuration
+        run: |
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./config/prometheus.yml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/prometheus.yml
 
-    - name: Install Docker, Prometheus, Grafana, MySQL
-      env:
-        EC2_IP: ${{ needs.iac-build.outputs.target_ec2_ip }}
-      run: |
-        ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
-          # Install Docker
-          sudo apt-get update
-          sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-          sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-          sudo apt-get update
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io jq
+      - name: Install Docker, Prometheus, Grafana, MySQL
+        env:
+          EC2_IP: ${{ needs.iac-build.outputs.target_ec2_ip }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
+            # Install Docker
+            sudo apt-get update
+            sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+            sudo apt-get update
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io jq
 
-          # Start Docker service
-          sudo systemctl start docker
-          sudo systemctl enable docker
+            # Start Docker service
+            sudo systemctl start docker
+            sudo systemctl enable docker
 
-          # Verify Docker is running
-          sudo systemctl status docker
+            # Verify Docker is running
+            sudo systemctl status docker
 
-          # Stage 1: Install Prometheus and Grafana
-          sudo docker run -d -p 9090:9090 --name prometheus -v /home/ubuntu/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
-          sudo docker run -d -p 3000:3000 --name grafana grafana/grafana
+            # Stage 1: Install Prometheus and Grafana
+            sudo docker run -d -p 9090:9090 --name prometheus -v /home/ubuntu/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
+            sudo docker run -d -p 3000:3000 --name grafana grafana/grafana
 
-          # Wait for Grafana to start
-          sleep 30
+            # Wait for Grafana to start
+            sleep 30
 
-          # Create Grafana API key
-          GRAFANA_API_KEY=$(curl -s -X POST "http://admin:admin@localhost:3000/api/auth/keys" -H "Content-Type: application/json" -d '{"name":"API_KEY","role":"Admin"}' | jq -r '.key')
+            # Create Grafana API key
+            GRAFANA_API_KEY=$(curl -s -X POST "http://admin:admin@localhost:3000/api/auth/keys" -H "Content-Type: application/json" -d '{"name":"API_KEY","role":"Admin"}' | jq -r '.key')
 
-          # Configure Grafana to connect to Prometheus
-          curl -s -X POST "http://admin:$GRAFANA_API_KEY@localhost:3000/api/datasources" -H "Content-Type: application/json" -d '{
-            "name": "Prometheus",
-            "type": "prometheus",
-            "url": "http://localhost:9090",
-            "access": "proxy",
-            "isDefault": true
-          }'
+            # Configure Grafana to connect to Prometheus
+            curl -s -X POST "http://admin:$GRAFANA_API_KEY@localhost:3000/api/datasources" -H "Content-Type: application/json" -d '{
+              "name": "Prometheus",
+              "type": "prometheus",
+              "url": "http://localhost:9090",
+              "access": "proxy",
+              "isDefault": true
+            }'
 
-          # Check the status of Prometheus and Grafana containers
-          sudo docker ps -a
-        EOF
-
-    - name: Deploy Application Docker Containers
-      env:
-        EC2_IP: ${{ needs.iac-build.outputs.target_ec2_ip }}
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        DOCKER_TOKEN: ${{ secrets.DOCKER_TOCKEN_NEW }}
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
-            echo "Deploying Docker containers..."
-
-            # Ensure Docker credentials are set
-            export DOCKER_USERNAME="$DOCKER_USERNAME"
-            export DOCKER_TOKEN="$DOCKER_TOKEN"
-
-            # Login to Docker registry
-            echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
-
-            # Pull and run your Docker containers (adjust ports and image names accordingly)
-            sudo docker pull "$DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG"
-            sudo docker pull "$DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG"
-            sudo docker pull "$DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG"
-            
-            sudo docker run -d -p 8080:8080 "$DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG"
-            sudo docker run -d -p 80:80 "$DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG"
-            sudo docker run -d -p 8880:8880 "$DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG"
-
-            # Check the status of the containers
+            # Check the status of Prometheus and Grafana containers
             sudo docker ps -a
-        EOF
+          EOF
+
+      - name: Deploy Application Docker Containers
+        env:
+          EC2_IP: ${{ needs.iac-build.outputs.target_ec2_ip }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOCKEN_NEW }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
+              echo "Deploying Docker containers..."
+
+              # Ensure Docker credentials are set
+              export DOCKER_USERNAME="$DOCKER_USERNAME"
+              export DOCKER_TOKEN="$DOCKER_TOKEN"
+
+              # Login to Docker registry
+              echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+              # Pull and run your Docker containers (adjust ports and image names accordingly)
+              sudo docker pull "$DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG"
+              sudo docker pull "$DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG"
+              sudo docker pull "$DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG"
+              
+              sudo docker run -d -p 8080:8080 "$DOCKER_USERNAME/sgproject:admin_frontend-$IMAGE_TAG"
+              sudo docker run -d -p 80:80 "$DOCKER_USERNAME/sgproject:studio_ghibli_frontend-$IMAGE_TAG"
+              sudo docker run -d -p 8880:8880 "$DOCKER_USERNAME/sgproject:gateway-$IMAGE_TAG"
+
+              # Check the status of the containers
+              sudo docker ps -a
+          EOF
