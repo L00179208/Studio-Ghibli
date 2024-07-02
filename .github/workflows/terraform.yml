@@ -188,7 +188,7 @@ jobs:
 
       - name: Copy Prometheus Configuration
         run: |
-          scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./config/prometheus.yml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/prometheus.yml
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./monitoring/prometheus.yml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/prometheus.yml
 
       - name: Install Docker, Prometheus, Grafana, MySQL
         env:
