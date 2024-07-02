@@ -186,6 +186,9 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
 
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
       - name: Install Docker, Prometheus, Grafana, MySQL
         env:
           EC2_IP: ${{ needs.iac-build.outputs.target_ec2_ip }}
@@ -197,12 +200,26 @@ jobs:
             curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
             sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
             sudo apt-get update
-            sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io jq
 
             # Stage 1: Install Prometheus and Grafana
-            sudo docker run -d -p 9090:9090 --name prometheus prom/prometheus
+            sudo docker run -d -p 9090:9090 --name prometheus -v /home/ubuntu/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
             sudo docker run -d -p 3000:3000 --name grafana grafana/grafana
 
+            # Wait for Grafana to start
+            sleep 30
+
+            # Create Grafana API key
+            GRAFANA_API_KEY=$(curl -s -X POST "http://admin:admin@localhost:3000/api/auth/keys" -H "Content-Type: application/json" -d '{"name":"API_KEY","role":"Admin"}' | jq -r '.key')
+
+            # Configure Grafana to connect to Prometheus
+            curl -s -X POST "http://admin:$GRAFANA_API_KEY@localhost:3000/api/datasources" -H "Content-Type: application/json" -d '{
+              "name": "Prometheus",
+              "type": "prometheus",
+              "url": "http://localhost:9090",
+              "access": "proxy",
+              "isDefault": true
+            }'
           EOF
 
       - name: Deploy Application Docker Containers
