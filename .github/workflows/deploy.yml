@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
-
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -68,8 +64,8 @@ jobs:
           build_and_push "admin_frontend" "admin_frontend"
           build_and_push "frontend/studio-ghibli" "studio_ghibli_frontend"
           build_and_push "backend/gateway" "gateway"
-          build_and_push "backend/courses" "courses"
-          build-and-push "backend/enrollment" "enrollment"
+          #build_and_push "backend/courses" "courses"
+          #build-and-push "backend/enrollment" "enrollment"
           build-and-push "backend/customers" "customers"
           build-and-push "backend/users" "users"
 
@@ -141,8 +137,8 @@ jobs:
           scan_image "${DOCKER_USERNAME}/sgproject:admin_frontend-${IMAGE_TAG}"
           scan_image "${DOCKER_USERNAME}/sgproject:studio_ghibli_frontend-${IMAGE_TAG}"
           scan_image "${DOCKER_USERNAME}/sgproject:gateway-${IMAGE_TAG}"    
-          scan_image "${DOCKER_USERNAME}/sgproject:courses-${{ github.sha }}"
-          scan_image "${DOCKER_USERNAME}/sgproject:enrollment-${{ github.sha }}"
+          #scan_image "${DOCKER_USERNAME}/sgproject:courses-${{ github.sha }}"
+          #scan_image "${DOCKER_USERNAME}/sgproject:enrollment-${{ github.sha }}"
           scan_image "${DOCKER_USERNAME}/sgproject:customers-${{ github.sha }}"
           scan_image "${DOCKER_USERNAME}/sgproject:users-${{ github.sha }}"                
 
@@ -312,16 +308,16 @@ jobs:
               sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:admin_frontend-${{ github.sha }}"
               sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:studio_ghibli_frontend-${{ github.sha }}"
               sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:gateway-${{ github.sha }}"
-              sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:courses-${{ github.sha }}"
-              sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:enrollment-${{ github.sha }}"
+              #sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:courses-${{ github.sha }}"
+              #sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:enrollment-${{ github.sha }}"
               sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:customers-${{ github.sha }}"
               sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:users-${{ github.sha }}"
               
               sudo docker run -d -p 8080:8080 "${{ secrets.DOCKER_USERNAME }}/sgproject:admin_frontend-${{ github.sha }}"
               sudo docker run -d -p 80:80 "${{ secrets.DOCKER_USERNAME }}/sgproject:studio_ghibli_frontend-${{ github.sha }}"
               sudo docker run -d -p 8880:8880 "${{ secrets.DOCKER_USERNAME }}/sgproject:gateway-${{ github.sha }}"
-              sudo docker run -d -p 8884:8884 "${{ secrets.DOCKER_USERNAME }}/sgproject:courses-${{ github.sha }}"
-              sudo docker run -d -p 8883:8883 "${{ secrets.DOCKER_USERNAME }}/sgproject:enrollment-${{ github.sha }}"
+              #sudo docker run -d -p 8884:8884 "${{ secrets.DOCKER_USERNAME }}/sgproject:courses-${{ github.sha }}"
+              #sudo docker run -d -p 8883:8883 "${{ secrets.DOCKER_USERNAME }}/sgproject:enrollment-${{ github.sha }}"
               sudo docker run -d -p 8882:8882 "${{ secrets.DOCKER_USERNAME }}/sgproject:customers-${{ github.sha }}"
               sudo docker run -d -p 8881:8881 "${{ secrets.DOCKER_USERNAME }}/sgproject:users-${{ github.sha }}"
           EOF
