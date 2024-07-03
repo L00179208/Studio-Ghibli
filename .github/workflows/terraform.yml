@@ -108,6 +108,7 @@ jobs:
             sbom-gateway.cyclonedx.json          
 
   scan-docker-images:
+    name: 'Scan Docker Images'
     runs-on: ubuntu-latest
     needs: [build-and-push-images]
     continue-on-error: true 
@@ -129,204 +130,204 @@ jobs:
         run: |
           set -e
 
-          scan_image() {
-            local image_name=$1
+          # scan_image() {
+          #   local image_name=$1
 
-            echo "Scanning image: $image_name"
-            trivy image --exit-code 1 --severity HIGH,CRITICAL $image_name
-          }
+          #   echo "Scanning image: $image_name"
+          #   trivy image --exit-code 1 --severity HIGH,CRITICAL $image_name
+          # }
 
-          # Example: Scan multiple Docker images
-          #scan_image "${DOCKER_USERNAME}/sgproject:admin_frontend-${IMAGE_TAG}"
-          scan_image "${DOCKER_USERNAME}/sgproject:studio_ghibli_frontend-${IMAGE_TAG}"
-          scan_image "${DOCKER_USERNAME}/sgproject:gateway-${IMAGE_TAG}"    
-          # scan_image "${DOCKER_USERNAME}/sgproject:courses-${{ github.sha }}"
-          # scan_image "${DOCKER_USERNAME}/sgproject:enrollment-${{ github.sha }}"
-          # scan_image "${DOCKER_USERNAME}/sgproject:customers-${{ github.sha }}"
-          # scan_image "${DOCKER_USERNAME}/sgproject:users-${{ github.sha }}"                
+          # # Example: Scan multiple Docker images
+          # #scan_image "${DOCKER_USERNAME}/sgproject:admin_frontend-${IMAGE_TAG}"
+          # scan_image "${DOCKER_USERNAME}/sgproject:studio_ghibli_frontend-${IMAGE_TAG}"
+          # scan_image "${DOCKER_USERNAME}/sgproject:gateway-${IMAGE_TAG}"    
+          # # scan_image "${DOCKER_USERNAME}/sgproject:courses-${{ github.sha }}"
+          # # scan_image "${DOCKER_USERNAME}/sgproject:enrollment-${{ github.sha }}"
+          # # scan_image "${DOCKER_USERNAME}/sgproject:customers-${{ github.sha }}"
+          # # scan_image "${DOCKER_USERNAME}/sgproject:users-${{ github.sha }}"                
 
-  # iac-scanning:
-  #   name: 'Terraform Scanning'
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: 'Checkout Repository'
-  #       uses: actions/checkout@v2
+  iac-scanning:
+    name: 'Terraform Scanning'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v2
 
-  #     - name: 'Set Up Terraform'
-  #       uses: hashicorp/setup-terraform@v1
-  #       with:
-  #         terraform_version: 1.0.9
+      - name: 'Set Up Terraform'
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.9
 
-  #     - name: 'Install Terrascan'
-  #       run: |
-  #         curl -L https://github.com/tenable/terrascan/releases/download/v1.19.1/terrascan_1.19.1_Linux_x86_64.tar.gz -o terrascan.tar.gz
-  #         tar -xzf terrascan.tar.gz
-  #         chmod +x terrascan
-  #         sudo mv terrascan /usr/local/bin/terrascan
-  #         terrascan version
+      - name: 'Install Terrascan'
+        run: |
+          curl -L https://github.com/tenable/terrascan/releases/download/v1.19.1/terrascan_1.19.1_Linux_x86_64.tar.gz -o terrascan.tar.gz
+          tar -xzf terrascan.tar.gz
+          chmod +x terrascan
+          sudo mv terrascan /usr/local/bin/terrascan
+          terrascan version
 
-  #     - name: 'List Directory Contents'
-  #       run: ls -la ./iac
+      - name: 'List Directory Contents'
+        run: ls -la ./iac
 
-  #     - name: 'Perform Terrascan'
-  #       run: terrascan scan -i terraform -d ./iac
-  #       continue-on-error: true 
+      - name: 'Perform Terrascan'
+        run: terrascan scan -i terraform -d ./iac
+        continue-on-error: true 
 
-  # iac-build:
-  #   name: 'Terraform Plan and Apply'
-  #   needs: [iac-scanning, scan-docker-images]
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     target_ec2_ip: ${{ steps.get_ip.outputs.target_ip }}
-  #   steps:
-  #     - name: 'Checkout Repository'
-  #       uses: actions/checkout@v2
+  iac-build:
+    name: 'Terraform Plan and Apply'
+    needs: [iac-scanning, scan-docker-images]
+    runs-on: ubuntu-latest
+    outputs:
+      target_ec2_ip: ${{ steps.get_ip.outputs.target_ip }}
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v2
 
-  #     - name: 'Set Up Terraform'
-  #       uses: hashicorp/setup-terraform@v1
-  #       with:
-  #         terraform_version: 1.0.9
+      - name: 'Set Up Terraform'
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.9
 
-  #     - name: 'Terraform Init'
-  #       working-directory: ./iac
-  #       run: terraform init
+      - name: 'Terraform Init'
+        working-directory: ./iac
+        run: terraform init
 
-  #     - name: 'Terraform Validate'
-  #       working-directory: ./iac
-  #       run: terraform validate
+      - name: 'Terraform Validate'
+        working-directory: ./iac
+        run: terraform validate
 
-  #     - name: 'Terraform Plan'
-  #       working-directory: ./iac
-  #       run: terraform plan
+      - name: 'Terraform Plan'
+        working-directory: ./iac
+        run: terraform plan
 
-  #     - name: 'Terraform Apply'
-  #       working-directory: ./iac
-  #       id: get_ip
-  #       run: |
-  #         terraform apply -auto-approve
-  #         instance_ip=$(terraform output instance_public_ip)
-  #         match=$(echo "$instance_ip" | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')  # Extract digits and dots
-  #         echo "::set-output name=target_ip::$match"
+      - name: 'Terraform Apply'
+        working-directory: ./iac
+        id: get_ip
+        run: |
+          terraform apply -auto-approve
+          instance_ip=$(terraform output instance_public_ip)
+          match=$(echo "$instance_ip" | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')  # Extract digits and dots
+          echo "::set-output name=target_ip::$match"
 
-  # deploy-containers:
-  #   name: 'Deploy Docker Containers to EC2'
-  #   needs: [build-and-push-images,iac-build]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v2
+  deploy-containers:
+    name: 'Deploy Docker Containers to EC2'
+    needs: [build-and-push-images,iac-build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-  #     - name: Install SSH Client
-  #       run: sudo apt-get install -y openssh-client
+      - name: Install SSH Client
+        run: sudo apt-get install -y openssh-client
 
-  #     - name: Add SSH Key
-  #       uses: webfactory/ssh-agent@v0.5.3
-  #       with:
-  #         ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+      - name: Add SSH Key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
 
-  #     - name: Install envsubst
-  #       run: sudo apt-get install -y gettext-base
+      - name: Install envsubst
+        run: sudo apt-get install -y gettext-base
 
-  #     - name: Replace placeholders in Prometheus configuration
-  #       run: |
-  #         export EC2_IP=${{ needs.iac-build.outputs.target_ec2_ip }}
-  #         envsubst < ./monitoring/prometheus.yml.template > ./monitoring/prometheus.yml
-  #         envsubst < ./monitoring/datasources.yml.template > ./monitoring/datasources.yaml
+      - name: Replace placeholders in Prometheus configuration
+        run: |
+          export EC2_IP=${{ needs.iac-build.outputs.target_ec2_ip }}
+          envsubst < ./monitoring/prometheus.yml.template > ./monitoring/prometheus.yml
+          envsubst < ./monitoring/datasources.yml.template > ./monitoring/datasources.yaml
 
-  #     - name: Copy Configuration Files
-  #       run: |
-  #         scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./monitoring/prometheus.yml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/prometheus.yml
-  #         scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./monitoring/datasources.yaml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/datasources.yaml
-  #         scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./monitoring/blackbox.yml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/blackbox.yml
+      - name: Copy Configuration Files
+        run: |
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./monitoring/prometheus.yml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/prometheus.yml
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./monitoring/datasources.yaml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/datasources.yaml
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=60 ./monitoring/blackbox.yml ubuntu@${{ needs.iac-build.outputs.target_ec2_ip }}:/home/ubuntu/blackbox.yml
 
-  #     - name: Install Docker, Prometheus, Grafana, MySQL
-  #       env:
-  #         EC2_IP: ${{ needs.iac-build.outputs.target_ec2_ip }}
-  #       run: |
-  #         ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
-  #           # Install Docker
-  #           sudo apt-get update
-  #           sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-  #           curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-  #           sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-  #           sudo apt-get update
-  #           sudo apt-get install -y docker-ce docker-ce-cli containerd.io jq
+      - name: Install Docker, Prometheus, Grafana, MySQL
+        env:
+          EC2_IP: ${{ needs.iac-build.outputs.target_ec2_ip }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
+            # Install Docker
+            sudo apt-get update
+            sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+            sudo apt-get update
+            sudo apt-get install -y docker-ce docker-ce-cli containerd.io jq
 
-  #           # Start Docker service
-  #           sudo systemctl start docker
-  #           sudo systemctl enable docker
+            # Start Docker service
+            sudo systemctl start docker
+            sudo systemctl enable docker
 
-  #           # Verify Docker is running
-  #           sudo systemctl status docker
+            # Verify Docker is running
+            sudo systemctl status docker
 
-  #           # Create provisioning directory for Grafana
-  #           sudo mkdir -p /etc/grafana/provisioning/datasources
-  #           sudo mv /home/ubuntu/datasources.yaml /etc/grafana/provisioning/datasources/datasources.yaml
+            # Create provisioning directory for Grafana
+            sudo mkdir -p /etc/grafana/provisioning/datasources
+            sudo mv /home/ubuntu/datasources.yaml /etc/grafana/provisioning/datasources/datasources.yaml
 
-  #           # Stage 1: Install Prometheus and Grafana
-  #           sudo docker run -d -p 9090:9090 --name prometheus -v /home/ubuntu/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
-  #           sudo docker run -d -p 3000:3000 --name grafana -v /etc/grafana/provisioning:/etc/grafana/provisioning grafana/grafana
+            # Stage 1: Install Prometheus and Grafana
+            sudo docker run -d -p 9090:9090 --name prometheus -v /home/ubuntu/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
+            sudo docker run -d -p 3000:3000 --name grafana -v /etc/grafana/provisioning:/etc/grafana/provisioning grafana/grafana
 
-  #           # Run Blackbox Exporter
-  #           sudo docker run -d -p 9115:9115 --name blackbox_exporter -v /home/ubuntu/blackbox.yml:/etc/blackbox_exporter/config.yml prom/blackbox-exporter
+            # Run Blackbox Exporter
+            sudo docker run -d -p 9115:9115 --name blackbox_exporter -v /home/ubuntu/blackbox.yml:/etc/blackbox_exporter/config.yml prom/blackbox-exporter
 
-  #           # Wait for Prometheus and Grafana to start
-  #           sleep 30
+            # Wait for Prometheus and Grafana to start
+            sleep 30
 
-  #           # Check Prometheus logs
-  #           sudo docker logs prometheus
+            # Check Prometheus logs
+            sudo docker logs prometheus
 
-  #           # Check Grafana logs
-  #           sudo docker logs grafana
-  #         EOF
+            # Check Grafana logs
+            sudo docker logs grafana
+          EOF
 
-  #     - name: Deploy Application Docker Containers
-  #       env:
-  #         EC2_IP: ${{ needs.iac-build.outputs.target_ec2_ip }}
-  #         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-  #         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-  #         DOCKER_TOKEN: ${{ secrets.DOCKER_TOCKEN_NEW }}
-  #         IMAGE_TAG: ${{ github.sha }}
-  #       run: |
-  #         ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
-  #             # Stage 2: Install MySQL and deploy custom Docker containers
-  #             # sudo docker run -d -p 3306:3306 --name mysql \
-  #             #   -e MYSQL_ROOT_PASSWORD=1234!@#$qwer \
-  #             #   -e MYSQL_DATABASE=sgapp \
-  #             #   -e MYSQL_USER=sguser \
-  #             #   -e MYSQL_PASSWORD=sguser!@34 \
-  #             #   mysql:latest
+      - name: Deploy Application Docker Containers
+        env:
+          EC2_IP: ${{ needs.iac-build.outputs.target_ec2_ip }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOCKEN_NEW }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=60 ubuntu@$EC2_IP << 'EOF'
+              # Stage 2: Install MySQL and deploy custom Docker containers
+              # sudo docker run -d -p 3306:3306 --name mysql \
+              #   -e MYSQL_ROOT_PASSWORD=1234!@#$qwer \
+              #   -e MYSQL_DATABASE=sgapp \
+              #   -e MYSQL_USER=sguser \
+              #   -e MYSQL_PASSWORD=sguser!@34 \
+              #   mysql:latest
             
-  #             echo "Deploying Docker containers..."
+              echo "Deploying Docker containers..."
               
-  #             # Ensure Docker credentials are set
-  #             export DOCKER_USERNAME="$DOCKER_USERNAME"
-  #             export DOCKER_TOKEN="$DOCKER_TOKEN"
+              # Ensure Docker credentials are set
+              export DOCKER_USERNAME="$DOCKER_USERNAME"
+              export DOCKER_TOKEN="$DOCKER_TOKEN"
               
-  #             # Login to Docker registry
-  #             #echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
-  #             docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin <<< "${{ secrets.DOCKER_TOCKEN_NEW }}"
+              # Login to Docker registry
+              #echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
+              docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin <<< "${{ secrets.DOCKER_TOCKEN_NEW }}"
               
-  #             # Update the system (recommended)
-  #             sudo apt update && sudo apt upgrade -y
+              # Update the system (recommended)
+              sudo apt update && sudo apt upgrade -y
 
-  #             # (Optional) Restart the Docker service (may not be necessary)
-  #             sudo systemctl restart docker.sock
+              # (Optional) Restart the Docker service (may not be necessary)
+              sudo systemctl restart docker.sock
 
-  #             # Pull and run your Docker containers (adjust ports and image names accordingly)
-  #             #sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:admin_frontend-${{ github.sha }}"
-  #             sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:studio_ghibli_frontend-${{ github.sha }}"
-  #             sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:gateway-${{ github.sha }}"
-  #             # sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:courses-${{ github.sha }}"
-  #             # sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:enrollment-${{ github.sha }}"
-  #             # sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:customers-${{ github.sha }}"
-  #             # sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:users-${{ github.sha }}"
+              # Pull and run your Docker containers (adjust ports and image names accordingly)
+              #sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:admin_frontend-${{ github.sha }}"
+              sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:studio_ghibli_frontend-${{ github.sha }}"
+              sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:gateway-${{ github.sha }}"
+              # sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:courses-${{ github.sha }}"
+              # sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:enrollment-${{ github.sha }}"
+              # sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:customers-${{ github.sha }}"
+              # sudo docker pull "${{ secrets.DOCKER_USERNAME }}/sgproject:users-${{ github.sha }}"
               
-  #             #sudo docker run -d -p 8080:8080 "${{ secrets.DOCKER_USERNAME }}/sgproject:admin_frontend-${{ github.sha }}"
-  #             sudo docker run -d -p 80:80 "${{ secrets.DOCKER_USERNAME }}/sgproject:studio_ghibli_frontend-${{ github.sha }}"
-  #             sudo docker run -d -p 8880:8880 "${{ secrets.DOCKER_USERNAME }}/sgproject:gateway-${{ github.sha }}"
-  #             # sudo docker run -d -p 8884:8884 "${{ secrets.DOCKER_USERNAME }}/sgproject:courses-${{ github.sha }}"
-  #             # sudo docker run -d -p 8883:8883 "${{ secrets.DOCKER_USERNAME }}/sgproject:enrollment-${{ github.sha }}"
-  #             # sudo docker run -d -p 8882:8882 "${{ secrets.DOCKER_USERNAME }}/sgproject:customers-${{ github.sha }}"
-  #             # sudo docker run -d -p 8881:8881 "${{ secrets.DOCKER_USERNAME }}/sgproject:users-${{ github.sha }}"
-  #         EOF
+              #sudo docker run -d -p 8080:8080 "${{ secrets.DOCKER_USERNAME }}/sgproject:admin_frontend-${{ github.sha }}"
+              sudo docker run -d -p 80:80 "${{ secrets.DOCKER_USERNAME }}/sgproject:studio_ghibli_frontend-${{ github.sha }}"
+              sudo docker run -d -p 8880:8880 "${{ secrets.DOCKER_USERNAME }}/sgproject:gateway-${{ github.sha }}"
+              # sudo docker run -d -p 8884:8884 "${{ secrets.DOCKER_USERNAME }}/sgproject:courses-${{ github.sha }}"
+              # sudo docker run -d -p 8883:8883 "${{ secrets.DOCKER_USERNAME }}/sgproject:enrollment-${{ github.sha }}"
+              # sudo docker run -d -p 8882:8882 "${{ secrets.DOCKER_USERNAME }}/sgproject:customers-${{ github.sha }}"
+              # sudo docker run -d -p 8881:8881 "${{ secrets.DOCKER_USERNAME }}/sgproject:users-${{ github.sha }}"
+          EOF
