@@ -1,0 +1,30 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+  - job_name: 'stg_microservices'
+    static_configs:
+      - targets:
+          - $EC2_IP:8880
+          - $EC2_IP:8881
+          - $EC2_IP:8882
+          - $EC2_IP:8884
+          - $EC2_IP:8885
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # The module to use for probing
+    static_configs:
+      - targets:
+          - http://$EC2_IP  # Replace with your website URL
+          - http://$EC2_IP:8080  # Replace with your website URL
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target  # Convert target to a parameter for blackbox
+      - source_labels: [__param_target]
+        target_label: instance  # Label the instance for Prometheus
+      - target_label: __address__
+        replacement: localhost:9115  # Set the blackbox exporter address      
